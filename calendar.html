@@ -65,7 +65,9 @@ function render() {
     const wd = dateObj.getDay();
     const wdLabel = ['日','月','火','水','木','金','土'][wd];
     const wdClass = wd === 0 ? 'sun' : (wd === 6 ? 'sat' : '');
-    const dateStr = y + String(m).padStart(2,'0') + String(d).padStart(2,'0');
+    // ダッシュボードのファイル名は6桁(年2桁+月2桁+日2桁)形式のため、こちらに合わせる
+    const yy = String(parseInt(y) - 2000).padStart(2,'0');
+    const dateStr = yy + String(m).padStart(2,'0') + String(d).padStart(2,'0');
     let venueHtml = '';
     for (const v of venues) {
       const hasDashboard = dashboardDates.has(dateStr);
