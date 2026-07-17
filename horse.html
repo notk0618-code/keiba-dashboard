@@ -36,9 +36,11 @@ function loadData() {
 }
 
 function raceRowHtml(e) {
-  const [date, venue, distance, raceName, finish, weight, track, surface, af, pace, dashDate, rNum] = e;
+  const [date, venue, distance, raceName, finish, weight, track, surface, af, pace, dashDate, rNum, archiveKey] = e;
   let raceNameDisplay = raceName;
-  if (dashDate) {
+  if (archiveKey) {
+    raceNameDisplay = '<a href="race.html?key=' + encodeURIComponent(archiveKey) + '">' + raceName + '</a>';
+  } else if (dashDate) {
     raceNameDisplay = '<a href="dashboard_' + dashDate + '.html#' + venue + '_' + rNum + '">' + raceName + '</a>';
   }
   let afDisplay = '';
@@ -76,6 +78,11 @@ function renderSearchResults(query) {
   document.getElementById('resultsArea').innerHTML = html;
 }
 
+function getParam(name) {
+  const params = new URLSearchParams(window.location.search);
+  return params.get(name);
+}
+
 document.getElementById('searchBox').addEventListener('input', function(e) {
   const query = e.target.value;
   if (!horseData) {
@@ -84,5 +91,10 @@ document.getElementById('searchBox').addEventListener('input', function(e) {
     renderSearchResults(query);
   }
 });
+
+const initialName = getParam('name');
+if (initialName) {
+  loadData().then(() => showHorseDetail(initialName));
+}
 </script>
 </body></html>
