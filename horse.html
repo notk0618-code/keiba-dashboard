@@ -7,9 +7,13 @@
   .result-item:active { background:#eef; }
   .race-row { border-bottom:1px solid #eee; padding:8px 0; font-size:13px; }
   .race-row:last-child { border-bottom:none; }
+  .race-row a { color:#185fa5; text-decoration:none; font-weight:bold; }
   .back-link { display:inline-block; margin-bottom:12px; color:#185fa5; text-decoration:none; font-size:14px; }
   h2 { font-size:16px; margin:16px 0 8px; }
   .loading { color:#888; font-size:14px; padding:20px 0; text-align:center; }
+  .af-badge { display:inline-block; padding:1px 6px; border-radius:4px; font-size:11px; margin-left:4px; }
+  .af-good { background:#d4edda; color:#155724; }
+  .af-bad { background:#f8d7da; color:#721c24; }
 </style>
 </head><body>
 <a href="calendar.html" class="back-link">‹ カレンダーに戻る</a>
@@ -31,14 +35,27 @@ function loadData() {
   return loadingPromise;
 }
 
+function raceRowHtml(e) {
+  const [date, venue, distance, raceName, finish, weight, track, surface, af, pace, dashDate, rNum] = e;
+  let raceNameDisplay = raceName;
+  if (dashDate) {
+    raceNameDisplay = '<a href="dashboard_' + dashDate + '.html#' + venue + '_' + rNum + '">' + raceName + '</a>';
+  }
+  let afDisplay = '';
+  if (af !== null) {
+    const cls = af < 0 ? 'af-good' : 'af-bad';
+    afDisplay = '<span class="af-badge ' + cls + '">AF ' + af.toFixed(2) + '%</span>';
+  }
+  let paceDisplay = pace ? ' / ' + pace : '';
+  return '<div class="race-row">' + date + ' ' + venue + distance + 'm(' + surface + ') ' +
+         raceNameDisplay + ' / ' + finish + '着 / 馬場:' + (track || '-') + paceDisplay + afDisplay + '</div>';
+}
+
 function showHorseDetail(name) {
   const races = horseData[name];
   let html = '<a href="#" onclick="renderSearchResults(document.getElementById(\'searchBox\').value); return false;" class="back-link">‹ 検索結果に戻る</a>';
   html += '<h2>' + name + '(' + races.length + '走)</h2>';
-  races.forEach(r => {
-    html += '<div class="race-row">' + r.date + ' ' + r.venue + r.distance + 'm(' + r.surface + ') ' +
-            r.race_name + ' / ' + r.finish + '着 / 馬場:' + (r.track || '-') + '</div>';
-  });
+  races.forEach(e => { html += raceRowHtml(e); });
   document.getElementById('resultsArea').innerHTML = html;
 }
 
