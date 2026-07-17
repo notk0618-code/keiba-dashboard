@@ -1,0 +1,45 @@
+<html><head><meta charset="utf-8"><meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body { font-family: sans-serif; background:#f5f5f5; margin:0; padding:12px; max-width:520px; margin-left:auto; margin-right:auto; box-sizing:border-box; }
+  .entry-row { background:#fff; border:1px solid #ddd; border-radius:8px; padding:8px 12px; margin-bottom:6px; font-size:13px; display:flex; justify-content:space-between; }
+  .entry-row a { color:#185fa5; text-decoration:none; font-weight:bold; }
+  .back-link { display:inline-block; margin-bottom:12px; color:#185fa5; text-decoration:none; font-size:14px; }
+  h2 { font-size:16px; margin:16px 0 8px; }
+  .loading { color:#888; font-size:14px; padding:20px 0; text-align:center; }
+  .af-badge { padding:1px 6px; border-radius:4px; font-size:11px; }
+  .af-good { background:#d4edda; color:#155724; }
+  .af-bad { background:#f8d7da; color:#721c24; }
+</style>
+</head><body>
+<a href="horse.html" class="back-link">‹ 馬名検索に戻る</a>
+<div id="content"><div class="loading">読み込み中…</div></div>
+
+<script>
+function getParam(name) {
+  const params = new URLSearchParams(window.location.search);
+  return params.get(name);
+}
+
+const raceKey = getParam('key');
+
+fetch('race_archive.json').then(r => r.json()).then(data => {
+  const race = data[raceKey];
+  if (!race) {
+    document.getElementById('content').innerHTML = '<div class="loading">データが見つかりません</div>';
+    return;
+  }
+  let html = '<h2>' + race.date + ' ' + race.venue + race.r + 'R ' + race.race_name + '(' + race.distance + 'm・' + race.surface + ')</h2>';
+  race.entries.forEach(e => {
+    const [name, finish, af, weight, ninki] = e;
+    let afHtml = '';
+    if (af !== null) {
+      const cls = af < 0 ? 'af-good' : 'af-bad';
+      afHtml = '<span class="af-badge ' + cls + '">AF ' + af.toFixed(2) + '%</span>';
+    }
+    html += '<div class="entry-row"><span>' + finish + '着 <a href="horse.html?name=' + encodeURIComponent(name) + '">' + name + '</a>(' + (weight || '-') + 'kg・' + (ninki || '-') + '人気)</span>' + afHtml + '</div>';
+  });
+  document.getElementById('content').innerHTML = html;
+});
+</script>
+</body></html>
