@@ -1,0 +1,71 @@
+<html><head><meta charset="utf-8"><meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body { font-family: sans-serif; background:#f5f5f5; margin:0; padding:12px; max-width:520px; margin-left:auto; margin-right:auto; box-sizing:border-box; }
+  input[type=text] { width:100%; box-sizing:border-box; padding:10px; font-size:16px; border:1px solid #ccc; border-radius:8px; margin-bottom:12px; }
+  .result-item { background:#fff; border:1px solid #ddd; border-radius:8px; padding:10px 12px; margin-bottom:8px; cursor:pointer; }
+  .result-item:active { background:#eef; }
+  .race-row { border-bottom:1px solid #eee; padding:8px 0; font-size:13px; }
+  .race-row:last-child { border-bottom:none; }
+  .back-link { display:inline-block; margin-bottom:12px; color:#185fa5; text-decoration:none; font-size:14px; }
+  h2 { font-size:16px; margin:16px 0 8px; }
+  .loading { color:#888; font-size:14px; padding:20px 0; text-align:center; }
+</style>
+</head><body>
+<a href="calendar.html" class="back-link">‹ カレンダーに戻る</a>
+<h2>🔍 馬名検索</h2>
+<input type="text" id="searchBox" placeholder="馬名を入力(部分一致)" autocomplete="off">
+<div id="resultsArea"></div>
+
+<script>
+let horseData = null;
+let loadingPromise = null;
+
+function loadData() {
+  if (loadingPromise) return loadingPromise;
+  document.getElementById('resultsArea').innerHTML = '<div class="loading">データ読み込み中(初回のみ時間がかかります)…</div>';
+  loadingPromise = fetch('horse_data.json').then(r => r.json()).then(data => {
+    horseData = data;
+    return data;
+  });
+  return loadingPromise;
+}
+
+function showHorseDetail(name) {
+  const races = horseData[name];
+  let html = '<a href="#" onclick="renderSearchResults(document.getElementById(\'searchBox\').value); return false;" class="back-link">‹ 検索結果に戻る</a>';
+  html += '<h2>' + name + '(' + races.length + '走)</h2>';
+  races.forEach(r => {
+    html += '<div class="race-row">' + r.date + ' ' + r.venue + r.distance + 'm(' + r.surface + ') ' +
+            r.race_name + ' / ' + r.finish + '着 / 馬場:' + (r.track || '-') + '</div>';
+  });
+  document.getElementById('resultsArea').innerHTML = html;
+}
+
+function renderSearchResults(query) {
+  if (!query || query.length < 1) {
+    document.getElementById('resultsArea').innerHTML = '';
+    return;
+  }
+  const matches = Object.keys(horseData).filter(name => name.includes(query)).slice(0, 50);
+  if (matches.length === 0) {
+    document.getElementById('resultsArea').innerHTML = '<div class="loading">該当する馬が見つかりません</div>';
+    return;
+  }
+  let html = '';
+  matches.forEach(name => {
+    html += '<div class="result-item" onclick="showHorseDetail(\'' + name.replace(/'/g, "\\'") + '\')">' + name + '(' + horseData[name].length + '走)</div>';
+  });
+  document.getElementById('resultsArea').innerHTML = html;
+}
+
+document.getElementById('searchBox').addEventListener('input', function(e) {
+  const query = e.target.value;
+  if (!horseData) {
+    loadData().then(() => renderSearchResults(query));
+  } else {
+    renderSearchResults(query);
+  }
+});
+</script>
+</body></html>
