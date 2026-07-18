@@ -85,8 +85,17 @@ function showRanking(key) {
   const venue = parts.join('_');
   let html = '<h3>' + venue + ' ' + distance + 'm(' + surface + ') AFランキング</h3>';
   entries.forEach((e, i) => {
-    const name = e[0], af = e[1], date = e[2];
-    html += '<div class="rank-row"><span>' + (i+1) + '位 <a href="horse.html?name=' + encodeURIComponent(name) + '">' + name + '</a></span><span>AF ' + af.toFixed(2) + '%(' + date + ')</span></div>';
+    const name = e[0], af = e[1], date = e[2], raceName = e[3], dashLink = e[4], archiveLink = e[5], rNum = e[6];
+    let raceNameDisplay = raceName || '-';
+    if (archiveLink) {
+      raceNameDisplay = '<a href="race.html?key=' + archiveLink + '">' + raceNameDisplay + '</a>';
+    } else if (dashLink && rNum) {
+      raceNameDisplay = '<a href="dashboard_' + dashLink + '.html#' + venue + '_' + rNum + '">' + raceNameDisplay + '</a>';
+    }
+    html += '<div class="rank-row" style="flex-direction:column; align-items:flex-start;">' +
+            '<div style="display:flex; justify-content:space-between; width:100%;"><span>' + (i+1) + '位 <a href="horse.html?name=' + encodeURIComponent(name) + '">' + name + '</a></span><span>AF ' + af.toFixed(2) + '%</span></div>' +
+            '<div style="font-size:11px; color:#888; margin-top:2px;">' + date + ' ' + raceNameDisplay + '</div>' +
+            '</div>';
   });
   document.getElementById('rankingResult').innerHTML = html;
   document.getElementById('rankingResult').scrollIntoView({behavior:'smooth'});
