@@ -1,0 +1,103 @@
+<html><head><meta charset="utf-8"><meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body { font-family: sans-serif; background:#f5f5f5; margin:0; padding:12px; max-width:520px; margin-left:auto; margin-right:auto; box-sizing:border-box; }
+  .period-row { display:flex; gap:8px; margin-bottom:16px; }
+  .period-btn { flex:1; padding:8px; border:2px solid #111; background:#fff; color:#111; border-radius:6px; font-size:13px; font-weight:bold; }
+  .period-btn.active { background:#111; color:#fff; }
+  .venue-header { background:#111; color:#fff; padding:8px 12px; border-radius:6px 6px 0 0; font-weight:bold; font-size:14px; margin-top:14px; }
+  .badge-row { display:flex; flex-wrap:wrap; gap:6px; padding:10px; background:#fff; border:1px solid #ddd; border-top:none; border-radius:0 0 6px 6px; }
+  .badge { padding:6px 10px; border-radius:6px; font-size:12px; border:none; color:#fff; }
+  .badge.turf { background:#111; }
+  .badge.dirt { background:#8b4513; }
+  .badge:disabled { background:#ccc; color:#888; }
+  #rankingResult { margin-top:20px; }
+  .rank-row { background:#fff; border:1px solid #ddd; border-radius:6px; padding:8px 10px; margin-bottom:6px; font-size:13px; display:flex; justify-content:space-between; }
+  .rank-row a { color:#0645AD; text-decoration:none; font-weight:bold; }
+  .loading { color:#888; font-size:14px; padding:20px 0; text-align:center; }
+  h2 { font-size:16px; margin:16px 0 8px; }
+  h3 { font-size:15px; margin:0 0 10px; }
+</style>
+</head><body><div id="top" style="background:#000; margin:-12px -12px 0 -12px; padding:14px 16px; border-bottom:3px solid #ff6600; display:flex; justify-content:space-between; align-items:center; font-family:sans-serif;">
+<a href="index.html" style="color:#fff; font-weight:bold; font-size:17px; letter-spacing:0.5px; text-decoration:none;">AF<span style="color:#ff6600;">Keiba</span>DATA</a>
+<div style="display:flex; gap:14px;">
+
+<a href="ranking.html" style="color:#ddd; text-decoration:none; font-size:12px;">🏆 ランキング</a>
+<a href="calendar.html" style="color:#ddd; text-decoration:none; font-size:12px;">📅 カレンダー</a>
+<a href="horse.html" style="color:#ddd; text-decoration:none; font-size:12px;">🔍 検索</a>
+</div>
+</div>
+<div style="height:14px;"></div>
+<h2>🏆 会場別AFランキング</h2>
+<div class="period-row">
+  <button class="period-btn active" id="btn-all" onclick="changePeriod('all')">全期間</button>
+  <button class="period-btn" id="btn-3y" onclick="changePeriod('3y')">直近3年</button>
+  <button class="period-btn" id="btn-1y" onclick="changePeriod('1y')">直近1年</button>
+</div>
+<div id="grid"><div class="loading">読み込み中…</div></div>
+<div id="rankingResult"></div>
+
+<script>
+let rankingData = null;
+let cellIndex = {};
+let currentPeriod = 'all';
+
+fetch('af_ranking.json').then(r => r.json()).then(data => {
+  rankingData = data;
+  const allKeys = new Set();
+  Object.values(data).forEach(periodObj => Object.keys(periodObj).forEach(k => allKeys.add(k)));
+  allKeys.forEach(k => {
+    const parts = k.split('_');
+    const distance = parts.pop();
+    const surface = parts.pop();
+    const venue = parts.join('_');
+    if (!cellIndex[venue]) cellIndex[venue] = [];
+    cellIndex[venue].push({surface: surface, distance: parseInt(distance), key: k});
+  });
+  Object.keys(cellIndex).forEach(v => cellIndex[v].sort((a,b) => (a.surface > b.surface ? 1 : -1) || a.distance - b.distance));
+  renderGrid();
+});
+
+function renderGrid() {
+  let html = '';
+  Object.keys(cellIndex).sort().forEach(venue => {
+    html += '<div class="venue-header">' + venue + '</div><div class="badge-row">';
+    cellIndex[venue].forEach(c => {
+      const hasData = rankingData[currentPeriod] && rankingData[currentPeriod][c.key] && rankingData[currentPeriod][c.key].length > 0;
+      const label = c.distance + 'm(' + c.surface + ')';
+      const cls = 'badge ' + (c.surface === '芝' ? 'turf' : 'dirt');
+      if (hasData) {
+        html += '<button class="' + cls + '" onclick="showRanking(\'' + c.key + '\')">' + label + '</button>';
+      } else {
+        html += '<button class="' + cls + '" disabled>' + label + '</button>';
+      }
+    });
+    html += '</div>';
+  });
+  document.getElementById('grid').innerHTML = html;
+}
+
+function showRanking(key) {
+  const entries = rankingData[currentPeriod][key];
+  const parts = key.split('_');
+  const distance = parts.pop();
+  const surface = parts.pop();
+  const venue = parts.join('_');
+  let html = '<h3>' + venue + ' ' + distance + 'm(' + surface + ') AFランキング</h3>';
+  entries.forEach((e, i) => {
+    const name = e[0], af = e[1], date = e[2];
+    html += '<div class="rank-row"><span>' + (i+1) + '位 <a href="horse.html?name=' + encodeURIComponent(name) + '">' + name + '</a></span><span>AF ' + af.toFixed(2) + '%(' + date + ')</span></div>';
+  });
+  document.getElementById('rankingResult').innerHTML = html;
+  document.getElementById('rankingResult').scrollIntoView({behavior:'smooth'});
+}
+
+function changePeriod(p) {
+  currentPeriod = p;
+  document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('btn-' + p).classList.add('active');
+  renderGrid();
+  document.getElementById('rankingResult').innerHTML = '';
+}
+</script>
+</body></html>
