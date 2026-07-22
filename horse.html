@@ -64,7 +64,14 @@ function raceRowHtml(e) {
 function showHorseDetail(name) {
   const races = horseData[name];
   let html = '<a href="#" onclick="renderSearchResults(document.getElementById(\'searchBox\').value); return false;" class="back-link">‹ 検索結果に戻る</a>';
-  html += '<h2>' + name + '(' + races.length + '走)</h2>';
+  const recent5Af = races.slice(0, 5).map(e => e[8]).filter(v => v !== null && v !== undefined);
+  let avgBadge = '';
+  if (recent5Af.length > 0) {
+    const avgAf = recent5Af.reduce((a,b) => a+b, 0) / recent5Af.length;
+    const cls = avgAf < 0 ? 'af-good' : 'af-bad';
+    avgBadge = '<span class="af-badge ' + cls + '" style="font-size:13px; margin-left:8px;" title="直近5走AF平均">AF平均 ' + avgAf.toFixed(2) + '%</span>';
+  }
+  html += '<h2>' + name + '(' + races.length + '走)' + avgBadge + '</h2>';
   races.forEach(e => { html += raceRowHtml(e); });
   document.getElementById('resultsArea').innerHTML = html;
 }
