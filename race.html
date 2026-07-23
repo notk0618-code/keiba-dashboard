@@ -44,7 +44,7 @@ fetch('race_archive.json').then(r => r.json()).then(data => {
   }
   let html = '<h2>' + race.date + ' ' + race.venue + race.r + 'R ' + race.race_name + '(' + race.distance + 'm・' + race.surface + ')</h2>';
   race.entries.forEach(e => {
-    const [name, finish, af, weight, ninki, jockey, agari, passage] = e;
+    const [name, finish, af, weight, ninki, jockey, agari, passage, timeStr] = e;
     let afHtml = '';
     if (af !== null) {
       const cls = af < 0 ? 'af-good' : 'af-bad';
@@ -52,7 +52,7 @@ fetch('race_archive.json').then(r => r.json()).then(data => {
     }
     html += '<div class="entry-row">' +
             '<div class="entry-top"><span>' + finish + '着 <a href="horse.html?name=' + encodeURIComponent(name) + '">' + name + '</a>(' + (weight || '-') + 'kg・' + (ninki || '-') + '人気)</span>' + afHtml + '</div>' +
-            '<div class="entry-sub">' + (jockey || '-') + ' ／ 上り' + (agari || '-') + ' ／ 通過' + (passage || '-') + '</div>' +
+            '<div class="entry-sub">' + (jockey || '-') + ' ／ ' + (timeStr || '-') + ' ／ 上り' + (agari || '-') + ' ／ 通過' + (passage || '-') + '</div>' +
             '</div>';
   });
 
