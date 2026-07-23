@@ -71,7 +71,18 @@ function showHorseDetail(name) {
     const cls = avgAf < 0 ? 'af-good' : 'af-bad';
     avgBadge = '<span class="af-badge ' + cls + '" style="font-size:13px; margin-left:8px;" title="直近5走AF平均">AF平均 ' + avgAf.toFixed(2) + '%</span>';
   }
-  html += '<h2>' + name + '(' + races.length + '走)' + avgBadge + '</h2>';
+  const typeCounts = {};
+  races.forEach(e => { const t = e[13]; if (t) { typeCounts[t] = (typeCounts[t] || 0) + 1; } });
+  let typeBadge = '';
+  const typeEntries = Object.entries(typeCounts);
+  if (typeEntries.length > 0) {
+    typeEntries.sort((a,b) => b[1] - a[1]);
+    const total = typeEntries.reduce((s,e) => s + e[1], 0);
+    const topType = typeEntries[0];
+    const label = (topType[1] / total >= 0.4) ? topType[0] : '⚖️ 総合力タイプ';
+    typeBadge = '<span class="type-badge" style="font-size:12px; margin-left:6px; background:#333; color:#fff; padding:2px 8px; border-radius:10px;" title="推定タイプ(' + topType[1] + '/' + total + '走)">' + label + '</span>';
+  }
+  html += '<h2>' + name + '(' + races.length + '走)' + avgBadge + typeBadge + '</h2>';
   races.forEach(e => { html += raceRowHtml(e); });
   document.getElementById('resultsArea').innerHTML = html;
 }
