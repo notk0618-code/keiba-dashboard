@@ -64,8 +64,14 @@ fetch('race_archive.json').then(r => r.json()).then(data => {
     if (race.laps && race.laps.length > 0) {
       html += '<div>ラップ: ' + race.laps.join('-') + '</div>';
     }
-    if (race.front3f !== null && race.front3f !== undefined) {
-      html += '<div>前半3F: ' + race.front3f.toFixed(1) + ' ／ 後半3F: ' + (race.back3f !== null ? race.back3f.toFixed(1) : '-') + '</div>';
+    if (race.splits && Object.keys(race.splits).length > 0) {
+      const parts = [];
+      [3, 4, 5].forEach(n => {
+        if (race.splits[n]) {
+          parts.push(n + 'F ' + race.splits[n].front.toFixed(1) + '-' + race.splits[n].back.toFixed(1));
+        }
+      });
+      html += '<div>前後半: ' + parts.join(' / ') + '</div>';
     }
     html += '</div>';
   }
