@@ -32,16 +32,58 @@
 
 <script>
 let horseData = null;
+let horseRatings = null;
 let loadingPromise = null;
 
 function loadData() {
   if (loadingPromise) return loadingPromise;
   document.getElementById('resultsArea').innerHTML = '<div class="loading">データ読み込み中(初回のみ時間がかかります)…</div>';
-  loadingPromise = fetch('horse_data.json').then(r => r.json()).then(data => {
+  const dataPromise = fetch('horse_data.json').then(r => r.json());
+  const ratingsPromise = fetch('horse_ratings.json').then(r => r.json()).catch(() => ({}));
+  loadingPromise = Promise.all([dataPromise, ratingsPromise]).then(([data, ratings]) => {
     horseData = data;
+    horseRatings = ratings;
     return data;
   });
   return loadingPromise;
+}
+
+function buildRadarChartSvg(ratings) {
+  // ratings: [総合力,瞬発力,持続力,距離適性,馬場適性,安定感] 各1-10
+  const labels = ['総合力','瞬発力','持続力','距離適性','馬場適性','安定感'];
+  const cx = 100, cy = 100, maxR = 75;
+  const n = 6;
+  const points = ratings.map((v, i) => {
+    const angle = (Math.PI * 2 * i / n) - Math.PI / 2;
+    const r = maxR * (v / 10);
+    return [cx + r * Math.cos(angle), cy + r * Math.sin(angle)];
+  });
+  const polygonPoints = points.map(p => p.join(',')).join(' ');
+
+  let gridHtml = '';
+  for (let level = 1; level <= 5; level++) {
+    const r = maxR * (level * 2 / 10);
+    const gridPoints = [];
+    for (let i = 0; i < n; i++) {
+      const angle = (Math.PI * 2 * i / n) - Math.PI / 2;
+      gridPoints.push([cx + r * Math.cos(angle), cy + r * Math.sin(angle)].join(','));
+    }
+    gridHtml += `<polygon points="${gridPoints.join(' ')}" fill="none" stroke="#ddd" stroke-width="1"/>`;
+  }
+
+  let labelHtml = '';
+  for (let i = 0; i < n; i++) {
+    const angle = (Math.PI * 2 * i / n) - Math.PI / 2;
+    const lx = cx + (maxR + 18) * Math.cos(angle);
+    const ly = cy + (maxR + 18) * Math.sin(angle);
+    labelHtml += `<text x="${lx}" y="${ly}" font-size="11" text-anchor="middle" dominant-baseline="middle" fill="#333">${labels[i]}(${ratings[i]})</text>`;
+  }
+
+  return `<svg width="220" height="220" viewBox="0 0 200 200" style="display:block; margin:8px auto;">
+    ${gridHtml}
+    <polygon points="${polygonPoints}" fill="rgba(255,102,0,0.35)" stroke="#ff6600" stroke-width="2"/>
+    ${labelHtml}
+  </svg>`;
 }
 
 function raceRowHtml(e) {
@@ -83,7 +125,16 @@ function showHorseDetail(name) {
     const label = (topType[1] / total >= 0.4) ? topType[0] : '⚖️ 総合力タイプ';
     typeBadge = '<span class="type-badge" style="font-size:12px; margin-left:6px; background:#333; color:#fff; padding:2px 8px; border-radius:10px;" title="推定タイプ(' + topType[1] + '/' + total + '走)">' + label + '</span>';
   }
-  html += '<h2>' + name + '(' + races.length + '走)' + avgBadge + typeBadge + '</h2>';
+  html += '<h2>' + name + '(' + races.length + '走)</h2>';
+  if (avgBadge || typeBadge) {
+    html += '<div style="margin-bottom:10px;">' + avgBadge + typeBadge + '</div>';
+  }
+  const ratings = horseRatings && horseRatings[name];
+  if (ratings) {
+    html += '<div style="text-align:center; background:#fafafa; border:1px solid #eee; border-radius:8px; padding:8px; margin-bottom:12px;">' +
+            '<div style="font-size:12px; color:#888; margin-bottom:2px;">能力レーダーチャート(1〜10段階・全馬相対評価)</div>' +
+            buildRadarChartSvg(ratings) + '</div>';
+  }
   races.forEach(e => { html += raceRowHtml(e); });
   document.getElementById('resultsArea').innerHTML = html;
 }
