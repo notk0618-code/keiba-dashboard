@@ -49,10 +49,10 @@ function loadData() {
 }
 
 function buildRadarChartSvg(ratings) {
-  // ratings: [総合力,瞬発力,持続力,距離適性,馬場適性,安定感] 各1-10
-  const labels = ['総合力','瞬発力','持続力','距離適性','馬場適性','安定感'];
+  // ratings: [基礎スピード,キレ,持続力,ポテンシャル,ギアチェンジ] 各1-10
+  const labels = ['基礎スピード','キレ','持続力','ポテンシャル','ギアチェンジ'];
   const cx = 100, cy = 100, maxR = 75;
-  const n = 6;
+  const n = 5;
   const points = ratings.map((v, i) => {
     const angle = (Math.PI * 2 * i / n) - Math.PI / 2;
     const r = maxR * (v / 10);
@@ -132,7 +132,7 @@ function showHorseDetail(name) {
   const ratings = horseRatings && horseRatings[name];
   if (ratings) {
     html += '<div style="text-align:center; background:#fafafa; border:1px solid #eee; border-radius:8px; padding:8px; margin-bottom:12px;">' +
-            '<div style="font-size:12px; color:#888; margin-bottom:2px;">能力レーダーチャート(1〜10段階・全馬相対評価)</div>' +
+            '<div style="font-size:12px; color:#888; margin-bottom:2px;">走破スタイル・レーダーチャート(1〜10段階・全馬相対評価)</div>' +
             buildRadarChartSvg(ratings) + '</div>';
   }
   races.forEach(e => { html += raceRowHtml(e); });
