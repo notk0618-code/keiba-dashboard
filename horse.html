@@ -33,6 +33,7 @@
 <script>
 let horseData = null;
 let horseRatings = null;
+let horseBestConditions = null;
 let loadingPromise = null;
 
 function loadData() {
@@ -40,22 +41,26 @@ function loadData() {
   document.getElementById('resultsArea').innerHTML = '<div class="loading">データ読み込み中(初回のみ時間がかかります)…</div>';
   const dataPromise = fetch('horse_data.json').then(r => r.json());
   const ratingsPromise = fetch('horse_ratings.json').then(r => r.json()).catch(() => ({}));
-  loadingPromise = Promise.all([dataPromise, ratingsPromise]).then(([data, ratings]) => {
+  const conditionsPromise = fetch('horse_best_conditions.json').then(r => r.json()).catch(() => ({}));
+  loadingPromise = Promise.all([dataPromise, ratingsPromise, conditionsPromise]).then(([data, ratings, conditions]) => {
     horseData = data;
     horseRatings = ratings;
+    horseBestConditions = conditions;
     return data;
   });
   return loadingPromise;
 }
 
 function buildRadarChartSvg(ratings) {
-  // ratings: [基礎スピード,キレ,持続力,ポテンシャル,ギアチェンジ] 各1-10
+  // ratings: [基礎スピード,キレ,持続力,ポテンシャル,ギアチェンジ] 各1-100(成果84で100点満点化)
+  // 2026/7/23修正(成果84): viewBoxが狭すぎて、左右のラベル(キレ・ギアチェンジ)が
+  // 見切れるバグを修正。viewBoxを拡張し、半径・ラベル距離を調整した
   const labels = ['基礎スピード','キレ','持続力','ポテンシャル','ギアチェンジ'];
-  const cx = 100, cy = 100, maxR = 75;
+  const cx = 110, cy = 100, maxR = 62;
   const n = 5;
   const points = ratings.map((v, i) => {
     const angle = (Math.PI * 2 * i / n) - Math.PI / 2;
-    const r = maxR * (v / 10);
+    const r = maxR * (v / 100);
     return [cx + r * Math.cos(angle), cy + r * Math.sin(angle)];
   });
   const polygonPoints = points.map(p => p.join(',')).join(' ');
@@ -74,12 +79,12 @@ function buildRadarChartSvg(ratings) {
   let labelHtml = '';
   for (let i = 0; i < n; i++) {
     const angle = (Math.PI * 2 * i / n) - Math.PI / 2;
-    const lx = cx + (maxR + 18) * Math.cos(angle);
-    const ly = cy + (maxR + 18) * Math.sin(angle);
+    const lx = cx + (maxR + 24) * Math.cos(angle);
+    const ly = cy + (maxR + 24) * Math.sin(angle);
     labelHtml += `<text x="${lx}" y="${ly}" font-size="11" text-anchor="middle" dominant-baseline="middle" fill="#333">${labels[i]}(${ratings[i]})</text>`;
   }
 
-  return `<svg width="220" height="220" viewBox="0 0 200 200" style="display:block; margin:8px auto;">
+  return `<svg width="240" height="210" viewBox="0 0 220 210" style="display:block; margin:8px auto;">
     ${gridHtml}
     <polygon points="${polygonPoints}" fill="rgba(255,102,0,0.35)" stroke="#ff6600" stroke-width="2"/>
     ${labelHtml}
@@ -87,7 +92,7 @@ function buildRadarChartSvg(ratings) {
 }
 
 function raceRowHtml(e) {
-  const [date, venue, distance, raceName, finish, weight, track, surface, af, pace, dashDate, rNum, archiveKey] = e;
+  const [date, venue, distance, raceName, finish, weight, track, surface, af, pace, dashDate, rNum, archiveKey, horseType, afTopPct] = e;
   let raceNameDisplay = raceName;
   if (archiveKey) {
     raceNameDisplay = '<a href="race.html?key=' + encodeURIComponent(archiveKey) + '">' + raceName + '</a>';
@@ -97,7 +102,8 @@ function raceRowHtml(e) {
   let afDisplay = '';
   if (af !== null) {
     const cls = af < 0 ? 'af-good' : 'af-bad';
-    afDisplay = '<span class="af-badge ' + cls + '">AF ' + af.toFixed(2) + '%</span>';
+    const pctStr = (afTopPct !== undefined && afTopPct !== null) ? '(上位' + afTopPct.toFixed(1) + '%)' : '';
+    afDisplay = '<span class="af-badge ' + cls + '">AF ' + af.toFixed(2) + '%' + pctStr + '</span>';
   }
   let paceDisplay = pace ? ' / ' + pace : '';
   return '<div class="race-row">' + date + ' ' + venue + distance + 'm(' + surface + ') ' +
@@ -105,7 +111,19 @@ function raceRowHtml(e) {
 }
 
 function showHorseDetail(name) {
-  const races = horseData[name];
+  let races = horseData[name];
+  if (!races) {
+    // 名前の完全一致に失敗した場合、前後の空白を除去して再試行(成果84)
+    const trimmedName = name.trim();
+    races = horseData[trimmedName];
+    if (races) { name = trimmedName; }
+  }
+  if (!races) {
+    document.getElementById('resultsArea').innerHTML =
+      '<a href="#" onclick="renderSearchResults(document.getElementById(\'searchBox\').value); return false;" class="back-link">‹ 検索結果に戻る</a>' +
+      '<p style="padding:20px; color:#888;">「' + name + '」のデータが見つかりませんでした。検索ボックスから名前を確認してください。</p>';
+    return;
+  }
   let html = '<a href="#" onclick="renderSearchResults(document.getElementById(\'searchBox\').value); return false;" class="back-link">‹ 検索結果に戻る</a>';
   const recent5Af = races.slice(0, 5).map(e => e[8]).filter(v => v !== null && v !== undefined);
   let avgBadge = '';
@@ -114,26 +132,29 @@ function showHorseDetail(name) {
     const cls = avgAf < 0 ? 'af-good' : 'af-bad';
     avgBadge = '<span class="af-badge ' + cls + '" style="font-size:13px; margin-left:8px;" title="直近5走AF平均">AF平均 ' + avgAf.toFixed(2) + '%</span>';
   }
-  const typeCounts = {};
-  races.forEach(e => { const t = e[13]; if (t) { typeCounts[t] = (typeCounts[t] || 0) + 1; } });
+  // 2026/7/23確定(成果84): タイプワッペンは、以前は別ロジック(ラップ形状k-means)
+  // ベースだったが、レーダーチャート(走破スタイル)の最高軸と不整合になるため、
+  // レーダーチャートの最高スコア軸をそのままタイプ表示に統一した
+  const ratings = horseRatings && horseRatings[name];
+  const typeAxisLabels = ['🏃基礎スピード型','✨キレ型','💪持続力型','🔋ポテンシャル型','🚀ギアチェンジ型'];
   let typeBadge = '';
-  const typeEntries = Object.entries(typeCounts);
-  if (typeEntries.length > 0) {
-    typeEntries.sort((a,b) => b[1] - a[1]);
-    const total = typeEntries.reduce((s,e) => s + e[1], 0);
-    const topType = typeEntries[0];
-    const label = (topType[1] / total >= 0.4) ? topType[0] : '⚖️ 総合力タイプ';
-    typeBadge = '<span class="type-badge" style="font-size:12px; margin-left:6px; background:#333; color:#fff; padding:2px 8px; border-radius:10px;" title="推定タイプ(' + topType[1] + '/' + total + '走)">' + label + '</span>';
+  if (ratings) {
+    let maxIdx = 0;
+    for (let i = 1; i < ratings.length; i++) { if (ratings[i] > ratings[maxIdx]) maxIdx = i; }
+    typeBadge = '<span class="type-badge" style="font-size:12px; margin-left:6px; background:#333; color:#fff; padding:2px 8px; border-radius:10px;" title="走破スタイル・レーダーチャートの最高軸(' + ratings[maxIdx] + '点)">' + typeAxisLabels[maxIdx] + '</span>';
   }
   html += '<h2>' + name + '(' + races.length + '走)</h2>';
   if (avgBadge || typeBadge) {
     html += '<div style="margin-bottom:10px;">' + avgBadge + typeBadge + '</div>';
   }
-  const ratings = horseRatings && horseRatings[name];
   if (ratings) {
     html += '<div style="text-align:center; background:#fafafa; border:1px solid #eee; border-radius:8px; padding:8px; margin-bottom:12px;">' +
-            '<div style="font-size:12px; color:#888; margin-bottom:2px;">走破スタイル・レーダーチャート(1〜10段階・全馬相対評価)</div>' +
+            '<div style="font-size:12px; color:#888; margin-bottom:2px;">走破スタイル・レーダーチャート(100点満点・全馬相対評価)</div>' +
             buildRadarChartSvg(ratings) + '</div>';
+  }
+  const bestCondition = horseBestConditions && horseBestConditions[name];
+  if (bestCondition) {
+    html += '<div style="text-align:center; font-size:12px; color:#555; margin-bottom:12px;">🎖️得意条件: ' + bestCondition + '</div>';
   }
   races.forEach(e => { html += raceRowHtml(e); });
   document.getElementById('resultsArea').innerHTML = html;
