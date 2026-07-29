@@ -92,7 +92,7 @@ function buildRadarChartSvg(ratings) {
 }
 
 function raceRowHtml(e) {
-  const [date, venue, distance, raceName, finish, weight, track, surface, af, pace, dashDate, rNum, archiveKey, horseType, afTopPct] = e;
+  const [date, venue, distance, raceName, finish, weight, track, surface, af, pace, dashDate, rNum, archiveKey, horseType, afTopPct, rankBadge] = e;
   let raceNameDisplay = raceName;
   if (archiveKey) {
     raceNameDisplay = '<a href="race.html?key=' + encodeURIComponent(archiveKey) + '">' + raceName + '</a>';
@@ -103,7 +103,8 @@ function raceRowHtml(e) {
   if (af !== null) {
     const cls = af < 0 ? 'af-good' : 'af-bad';
     const pctStr = (afTopPct !== undefined && afTopPct !== null) ? '(上位' + afTopPct.toFixed(1) + '%)' : '';
-    afDisplay = '<span class="af-badge ' + cls + '">AF ' + af.toFixed(2) + '%' + pctStr + '</span>';
+    const badgeStr = rankBadge ? ' <span style="background:#d4af37; color:#000; font-size:10px; padding:1px 5px; border-radius:8px; font-weight:bold;">' + rankBadge + '</span>' : '';
+    afDisplay = '<span class="af-badge ' + cls + '">AF ' + af.toFixed(2) + '%' + pctStr + '</span>' + badgeStr;
   }
   let paceDisplay = pace ? ' / ' + pace : '';
   return '<div class="race-row">' + date + ' ' + venue + distance + 'm(' + surface + ') ' +
