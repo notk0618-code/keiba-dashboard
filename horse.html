@@ -55,7 +55,7 @@ function buildRadarChartSvg(ratings) {
   // ratings: [基礎スピード,キレ,持続力,ポテンシャル,ギアチェンジ] 各1-100(成果84で100点満点化)
   // 2026/7/23修正(成果84): viewBoxが狭すぎて、左右のラベル(キレ・ギアチェンジ)が
   // 見切れるバグを修正。viewBoxを拡張し、半径・ラベル距離を調整した
-  const labels = ['基礎スピード','キレ','持続力','ポテンシャル','ギアチェンジ'];
+  const labels = ['基礎スピード','キレ','持続力','ポテンシャル','ギア'];
   const cx = 110, cy = 100, maxR = 62;
   const n = 5;
   const points = ratings.map((v, i) => {
@@ -145,7 +145,7 @@ function showHorseDetail(name) {
     let maxIdx = 0;
     for (let i = 1; i < ratings.length; i++) { if (ratings[i] > ratings[maxIdx]) maxIdx = i; }
     typeBadge = '<span class="type-badge" style="font-size:12px; margin-left:6px; background:#333; color:#fff; padding:2px 8px; border-radius:10px;" title="走破スタイル・レーダーチャートの最高軸(' + ratings[maxIdx] + '点)">' + typeAxisLabels[maxIdx] + '</span>';
-    totalBadge = '<span class="af-badge af-good" style="font-size:12px; margin-left:6px;" title="5項目合計(ベスト距離帯)">総合力 ' + ratingsEntry.total + '</span>';
+    totalBadge = '<span class="af-badge af-good" style="font-size:12px; margin-left:6px;" title="5項目合計(ベスト距離帯)">総合力 ' + ratingsEntry.total + '(' + ratingsEntry.totalRank + '/' + ratingsEntry.totalN + ')</span>';
   }
   html += '<h2>' + name + '(' + races.length + '走)</h2>';
   if (avgBadge || typeBadge || totalBadge) {
