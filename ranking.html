@@ -38,6 +38,10 @@
 <div id="grid"><div class="loading">読み込み中…</div></div>
 <div id="rankingResult"></div>
 
+<h2 style="margin-top:28px;">💯 総合力ランキングTop100</h2>
+<p style="font-size:12px; color:#666; margin-top:-4px;">走破スタイル・レーダーチャート(5項目合計・ベスト距離帯基準)の全馬順位です。会場・距離を問わず、距離を横断した総合力の高さを示します。</p>
+<div id="totalRankingResult"><div class="loading">読み込み中…</div></div>
+
 <script>
 let rankingData = null;
 let cellIndex = {};
@@ -57,6 +61,19 @@ fetch('af_ranking.json').then(r => r.json()).then(data => {
   });
   Object.keys(cellIndex).forEach(v => cellIndex[v].sort((a,b) => (a.surface > b.surface ? 1 : -1) || a.distance - b.distance));
   renderGrid();
+});
+
+fetch('total_ranking_top100.json').then(r => r.json()).then(data => {
+  let html = '';
+  data.forEach(e => {
+    html += '<div class="rank-row" style="flex-direction:column; align-items:flex-start;">' +
+            '<div style="display:flex; justify-content:space-between; width:100%;"><span>' + e.rank + '位 <a href="horse.html?name=' + encodeURIComponent(e.name) + '">' + e.name + '</a></span><span>総合力 ' + e.total + '</span></div>' +
+            '<div style="font-size:11px; color:#888; margin-top:2px;">得意: ' + e.bestBucket + '</div>' +
+            '</div>';
+  });
+  document.getElementById('totalRankingResult').innerHTML = html;
+}).catch(() => {
+  document.getElementById('totalRankingResult').innerHTML = '<div class="loading">データがまだありません</div>';
 });
 
 function renderGrid() {
