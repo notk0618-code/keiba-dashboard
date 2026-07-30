@@ -40,12 +40,18 @@
 
 <h2 style="margin-top:28px;">💯 総合力ランキングTop100</h2>
 <p style="font-size:12px; color:#666; margin-top:-4px;">走破スタイル・レーダーチャート(5項目合計・ベスト距離帯基準)の全馬順位です。会場・距離を問わず、距離を横断した総合力の高さを示します。</p>
+<div class="period-row" id="bucketTabRow">
+  <button class="period-btn active" data-bucket="all" onclick="changeBucketTab('all')">全体</button>
+</div>
 <div id="totalRankingResult"><div class="loading">読み込み中…</div></div>
 
 <script>
 let rankingData = null;
 let cellIndex = {};
 let currentPeriod = 'all';
+let totalTop100Data = null;
+let bucketRankingData = null;
+let currentBucketTab = 'all';
 
 fetch('af_ranking.json').then(r => r.json()).then(data => {
   rankingData = data;
@@ -63,18 +69,49 @@ fetch('af_ranking.json').then(r => r.json()).then(data => {
   renderGrid();
 });
 
-fetch('total_ranking_top100.json').then(r => r.json()).then(data => {
+function renderTotalRankingList(entries, showBucket) {
   let html = '';
-  data.forEach(e => {
+  entries.forEach(e => {
+    const bucketLine = showBucket ? ('得意: ' + e.bestBucket) : '';
     html += '<div class="rank-row" style="flex-direction:column; align-items:flex-start;">' +
             '<div style="display:flex; justify-content:space-between; width:100%;"><span>' + e.rank + '位 <a href="horse.html?name=' + encodeURIComponent(e.name) + '">' + e.name + '</a></span><span>総合力 ' + e.total + '</span></div>' +
-            '<div style="font-size:11px; color:#888; margin-top:2px;">得意: ' + e.bestBucket + '</div>' +
+            (bucketLine ? '<div style="font-size:11px; color:#888; margin-top:2px;">' + bucketLine + '</div>' : '') +
             '</div>';
   });
-  document.getElementById('totalRankingResult').innerHTML = html;
+  document.getElementById('totalRankingResult').innerHTML = html || '<div class="loading">データがまだありません</div>';
+}
+
+function changeBucketTab(bucketKey) {
+  currentBucketTab = bucketKey;
+  document.querySelectorAll('#bucketTabRow .period-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('#bucketTabRow [data-bucket="' + CSS.escape(bucketKey) + '"]').classList.add('active');
+  if (bucketKey === 'all') {
+    renderTotalRankingList(totalTop100Data || [], true);
+  } else {
+    renderTotalRankingList((bucketRankingData && bucketRankingData[bucketKey]) || [], false);
+  }
+}
+
+fetch('total_ranking_top100.json').then(r => r.json()).then(data => {
+  totalTop100Data = data;
+  if (currentBucketTab === 'all') renderTotalRankingList(data, true);
 }).catch(() => {
   document.getElementById('totalRankingResult').innerHTML = '<div class="loading">データがまだありません</div>';
 });
+
+fetch('bucket_total_ranking.json').then(r => r.json()).then(data => {
+  bucketRankingData = data;
+  const tabRow = document.getElementById('bucketTabRow');
+  Object.keys(data).forEach(bucketKey => {
+    const btn = document.createElement('button');
+    btn.className = 'period-btn';
+    btn.dataset.bucket = bucketKey;
+    btn.textContent = bucketKey;
+    btn.onclick = function() { changeBucketTab(bucketKey); };
+    tabRow.appendChild(btn);
+  });
+}).catch(() => {});
+
 
 function renderGrid() {
   let html = '';
