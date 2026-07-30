@@ -133,25 +133,31 @@ function showHorseDetail(name) {
     const cls = avgAf < 0 ? 'af-good' : 'af-bad';
     avgBadge = '<span class="af-badge ' + cls + '" style="font-size:13px; margin-left:8px;" title="直近5走AF平均">AF平均 ' + avgAf.toFixed(2) + '%</span>';
   }
-  // 2026/7/23確定(成果84): タイプワッペンは、以前は別ロジック(ラップ形状k-means)
-  // ベースだったが、レーダーチャート(走破スタイル)の最高軸と不整合になるため、
-  // レーダーチャートの最高スコア軸をそのままタイプ表示に統一した
-  const ratings = horseRatings && horseRatings[name];
+  // 2026/7/23確定(成果84・92): タイプワッペンはレーダーチャートの最高スコア軸に
+  // 統一。成果92より、horseRatingsは{ratings, total, favoriteRange}の構造に変更
+  // (ratingsは"ベスト距離帯"の5項目値、totalは合計=総合力、favoriteRangeは得意距離レンジ)
+  const ratingsEntry = horseRatings && horseRatings[name];
+  const ratings = ratingsEntry && ratingsEntry.ratings;
   const typeAxisLabels = ['🏃基礎スピード型','✨キレ型','💪持続力型','🔋ポテンシャル型','🚀ギアチェンジ型'];
   let typeBadge = '';
+  let totalBadge = '';
   if (ratings) {
     let maxIdx = 0;
     for (let i = 1; i < ratings.length; i++) { if (ratings[i] > ratings[maxIdx]) maxIdx = i; }
     typeBadge = '<span class="type-badge" style="font-size:12px; margin-left:6px; background:#333; color:#fff; padding:2px 8px; border-radius:10px;" title="走破スタイル・レーダーチャートの最高軸(' + ratings[maxIdx] + '点)">' + typeAxisLabels[maxIdx] + '</span>';
+    totalBadge = '<span class="af-badge af-good" style="font-size:12px; margin-left:6px;" title="5項目合計(ベスト距離帯)">総合力 ' + ratingsEntry.total + '</span>';
   }
   html += '<h2>' + name + '(' + races.length + '走)</h2>';
-  if (avgBadge || typeBadge) {
-    html += '<div style="margin-bottom:10px;">' + avgBadge + typeBadge + '</div>';
+  if (avgBadge || typeBadge || totalBadge) {
+    html += '<div style="margin-bottom:10px;">' + avgBadge + typeBadge + totalBadge + '</div>';
   }
   if (ratings) {
     html += '<div style="text-align:center; background:#fafafa; border:1px solid #eee; border-radius:8px; padding:8px; margin-bottom:12px;">' +
-            '<div style="font-size:12px; color:#888; margin-bottom:2px;">走破スタイル・レーダーチャート(100点満点・全馬相対評価)</div>' +
+            '<div style="font-size:12px; color:#888; margin-bottom:2px;">走破スタイル・レーダーチャート(100点満点・ベスト距離帯基準・全馬相対評価)</div>' +
             buildRadarChartSvg(ratings) + '</div>';
+  }
+  if (ratingsEntry && ratingsEntry.favoriteRange && ratingsEntry.favoriteRange.length > 0) {
+    html += '<div style="text-align:center; font-size:12px; color:#555; margin-bottom:4px;">📏得意距離レンジ: ' + ratingsEntry.favoriteRange.join('、') + '</div>';
   }
   const bestCondition = horseBestConditions && horseBestConditions[name];
   if (bestCondition) {
