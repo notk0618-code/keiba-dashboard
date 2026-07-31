@@ -140,18 +140,23 @@ function showHorseDetail(name) {
   const ratings = ratingsEntry && ratingsEntry.ratings;
   const typeAxisLabels = ['🏃基礎スピード型','✨キレ型','💪持続力型','🔋ポテンシャル型','🚀ギアチェンジ型'];
   let typeBadge = '';
-  let totalBadge = '';
+  let totalBadgeBlock = '';
   if (ratings) {
     let maxIdx = 0;
     for (let i = 1; i < ratings.length; i++) { if (ratings[i] > ratings[maxIdx]) maxIdx = i; }
     typeBadge = '<span class="type-badge" style="font-size:12px; margin-left:6px; background:#333; color:#fff; padding:2px 8px; border-radius:10px;" title="走破スタイル・レーダーチャートの最高軸(' + ratings[maxIdx] + '点)">' + typeAxisLabels[maxIdx] + '</span>';
-    const bucketRankStr = (ratingsEntry.bucketRank && ratingsEntry.bucketN) ? ' [' + ratingsEntry.bestBucket + '内:' + ratingsEntry.bucketRank + '/' + ratingsEntry.bucketN + ']' : '';
-    const styleSum = ratings.reduce((a,b) => a+b, 0);
-    totalBadge = '<span class="af-badge af-good" style="font-size:12px; margin-left:6px;" title="スタイル(5項目合計)+実績(AFベース)。ベスト距離帯基準">総合力 ' + ratingsEntry.total + '(スタイル' + styleSum + '+実績' + ratingsEntry.afScore + ')(全体:' + ratingsEntry.totalRank + '/' + ratingsEntry.totalN + ')' + bucketRankStr + '</span>';
+    // 2026/7/23確定(成果108、TAISUKE提案): 内訳(スタイル+実績)の表記は不要とし、
+    // 全体順位・距離帯内順位を、それぞれ改行して1行ずつ見やすく表示するよう変更
+    let rankLines = '<div>全体: ' + ratingsEntry.totalRank + '/' + ratingsEntry.totalN + '位</div>';
+    if (ratingsEntry.bucketRank && ratingsEntry.bucketN) {
+      rankLines += '<div>' + ratingsEntry.bestBucket + '内: ' + ratingsEntry.bucketRank + '/' + ratingsEntry.bucketN + '位</div>';
+    }
+    totalBadgeBlock = '<div class="af-badge af-good" style="display:inline-block; font-size:12px; margin-left:6px; text-align:left; vertical-align:top;">' +
+                       '<div style="font-weight:bold;">総合力 ' + ratingsEntry.total + '</div>' + rankLines + '</div>';
   }
   html += '<h2>' + name + '(' + races.length + '走)</h2>';
-  if (avgBadge || typeBadge || totalBadge) {
-    html += '<div style="margin-bottom:10px;">' + avgBadge + typeBadge + totalBadge + '</div>';
+  if (avgBadge || typeBadge || totalBadgeBlock) {
+    html += '<div style="margin-bottom:10px;">' + avgBadge + typeBadge + totalBadgeBlock + '</div>';
   }
   if (ratings) {
     html += '<div style="text-align:center; background:#fafafa; border:1px solid #eee; border-radius:8px; padding:8px; margin-bottom:12px;">' +
