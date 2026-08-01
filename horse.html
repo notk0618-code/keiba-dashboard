@@ -92,7 +92,7 @@ function buildRadarChartSvg(ratings) {
 }
 
 function raceRowHtml(e) {
-  const [date, venue, distance, raceName, finish, weight, track, surface, af, pace, dashDate, rNum, archiveKey, horseType, afTopPct, rankBadge] = e;
+  const [date, venue, distance, raceName, finish, weight, track, surface, af, pace, dashDate, rNum, archiveKey, horseType, afTopPct, rankBadge, af3katsu] = e;
   let raceNameDisplay = raceName;
   if (archiveKey) {
     raceNameDisplay = '<a href="race.html?key=' + encodeURIComponent(archiveKey) + '">' + raceName + '</a>';
@@ -104,7 +104,8 @@ function raceRowHtml(e) {
     const cls = af < 0 ? 'af-good' : 'af-bad';
     const pctStr = (afTopPct !== undefined && afTopPct !== null) ? '(上位' + afTopPct.toFixed(1) + '%)' : '';
     const badgeStr = rankBadge ? ' <span style="background:#d4af37; color:#000; font-size:10px; padding:1px 5px; border-radius:8px; font-weight:bold;">' + rankBadge + '</span>' : '';
-    afDisplay = '<span class="af-badge ' + cls + '">AF ' + af.toFixed(2) + '%' + pctStr + '</span>' + badgeStr;
+    const af3kStr = (af3katsu !== undefined && af3katsu !== null) ? ' <span class="af-badge ' + (af3katsu < 0 ? 'af-good' : 'af-bad') + '" style="font-size:10px;">3勝クラス基準AF ' + af3katsu.toFixed(2) + '%</span>' : '';
+    afDisplay = '<span class="af-badge ' + cls + '">AF ' + af.toFixed(2) + '%' + pctStr + '</span>' + badgeStr + af3kStr;
   }
   let paceDisplay = pace ? ' / ' + pace : '';
   return '<div class="race-row">' + date + ' ' + venue + distance + 'm(' + surface + ') ' +
@@ -125,50 +126,25 @@ function showHorseDetail(name) {
       '<p style="padding:20px; color:#888;">「' + name + '」のデータが見つかりませんでした。検索ボックスから名前を確認してください。</p>';
     return;
   }
+  // 2026/7/23確定(成果110、TAISUKE提案): 馬名の下の表示を、①ワッペン、
+  // ②総合力・全体順位・得意距離順位、③得意条件(距離・馬場・ペース)、の
+  // 3行構成に全面再構成。従来のAF平均バッジ・得意距離レンジ表示は削除
   let html = '<a href="#" onclick="renderSearchResults(document.getElementById(\'searchBox\').value); return false;" class="back-link">‹ 検索結果に戻る</a>';
-  const recent5Af = races.slice(0, 5).map(e => e[8]).filter(v => v !== null && v !== undefined);
-  let avgBadge = '';
-  if (recent5Af.length > 0) {
-    const avgAf = recent5Af.reduce((a,b) => a+b, 0) / recent5Af.length;
-    const cls = avgAf < 0 ? 'af-good' : 'af-bad';
-    avgBadge = '<span class="af-badge ' + cls + '" style="font-size:13px; margin-left:8px;" title="直近5走AF平均">AF平均 ' + avgAf.toFixed(2) + '%</span>';
-  }
-  // 2026/7/23確定(成果84・92): タイプワッペンはレーダーチャートの最高スコア軸に
-  // 統一。成果92より、horseRatingsは{ratings, total, favoriteRange}の構造に変更
-  // (ratingsは"ベスト距離帯"の5項目値、totalは合計=総合力、favoriteRangeは得意距離レンジ)
   const ratingsEntry = horseRatings && horseRatings[name];
   const ratings = ratingsEntry && ratingsEntry.ratings;
   const typeAxisLabels = ['🏃基礎スピード型','✨キレ型','💪持続力型','🔋ポテンシャル型','🚀ギアチェンジ型'];
-  let typeBadge = '';
-  let totalBadgeBlock = '';
+  html += '<h2>' + name + '(' + races.length + '走)</h2>';
   if (ratings) {
     let maxIdx = 0;
     for (let i = 1; i < ratings.length; i++) { if (ratings[i] > ratings[maxIdx]) maxIdx = i; }
-    typeBadge = '<span class="type-badge" style="font-size:12px; margin-left:6px; background:#333; color:#fff; padding:2px 8px; border-radius:10px;" title="走破スタイル・レーダーチャートの最高軸(' + ratings[maxIdx] + '点)">' + typeAxisLabels[maxIdx] + '</span>';
-    // 2026/7/23確定(成果108、TAISUKE提案): 内訳(スタイル+実績)の表記は不要とし、
-    // 全体順位・距離帯内順位を、それぞれ改行して1行ずつ見やすく表示するよう変更
-    let rankLines = '<div>全体: ' + ratingsEntry.totalRank + '/' + ratingsEntry.totalN + '位</div>';
-    if (ratingsEntry.bucketRank && ratingsEntry.bucketN) {
-      rankLines += '<div>' + ratingsEntry.bestBucket + '内: ' + ratingsEntry.bucketRank + '/' + ratingsEntry.bucketN + '位</div>';
-    }
-    totalBadgeBlock = '<div class="af-badge af-good" style="display:inline-block; font-size:12px; margin-left:6px; text-align:left; vertical-align:top;">' +
-                       '<div style="font-weight:bold;">総合力 ' + ratingsEntry.total + '</div>' + rankLines + '</div>';
-  }
-  html += '<h2>' + name + '(' + races.length + '走)</h2>';
-  if (avgBadge || typeBadge || totalBadgeBlock) {
-    html += '<div style="margin-bottom:10px;">' + avgBadge + typeBadge + totalBadgeBlock + '</div>';
-  }
-  if (ratings) {
+    const typeBadgeLine = '<div style="margin-bottom:2px;"><span class="type-badge" style="font-size:12px; background:#333; color:#fff; padding:2px 8px; border-radius:10px;" title="走破スタイル・レーダーチャートの最高軸(' + ratings[maxIdx] + '点)">' + typeAxisLabels[maxIdx] + '</span></div>';
+    const bucketRankStr = (ratingsEntry.bucketRank && ratingsEntry.bucketN) ? ('　得意距離順位 ' + ratingsEntry.bestBucket + '内' + ratingsEntry.bucketRank + '/' + ratingsEntry.bucketN + '位') : '';
+    const totalLine = '<div style="font-size:13px; margin-bottom:2px;">総合力 ' + ratingsEntry.total + '　全体順位 ' + ratingsEntry.totalRank + '/' + ratingsEntry.totalN + '位' + bucketRankStr + '</div>';
+    const bestCondition = horseBestConditions && horseBestConditions[name];
+    const conditionLine = bestCondition ? '<div style="font-size:13px; margin-bottom:8px;">得意条件：' + bestCondition + '</div>' : '';
+    html += typeBadgeLine + totalLine + conditionLine;
     html += '<div style="text-align:center; background:#fafafa; border:1px solid #eee; border-radius:8px; padding:8px; margin-bottom:12px;">' +
-            '<div style="font-size:12px; color:#888; margin-bottom:2px;">走破スタイル・レーダーチャート(100点満点・ベスト距離帯基準・全馬相対評価)</div>' +
             buildRadarChartSvg(ratings) + '</div>';
-  }
-  if (ratingsEntry && ratingsEntry.favoriteRange && ratingsEntry.favoriteRange.length > 0) {
-    html += '<div style="text-align:center; font-size:12px; color:#555; margin-bottom:4px;">📏得意距離レンジ: ' + ratingsEntry.favoriteRange.join('、') + '</div>';
-  }
-  const bestCondition = horseBestConditions && horseBestConditions[name];
-  if (bestCondition) {
-    html += '<div style="text-align:center; font-size:12px; color:#555; margin-bottom:12px;">🎖️得意条件: ' + bestCondition + '</div>';
   }
   races.forEach(e => { html += raceRowHtml(e); });
   document.getElementById('resultsArea').innerHTML = html;
