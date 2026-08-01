@@ -40,6 +40,10 @@
 
 <h2 style="margin-top:28px;">💯 総合力ランキングTop100</h2>
 <p style="font-size:12px; color:#666; margin-top:-4px;">走破スタイル・レーダーチャート(5項目合計・ベスト距離帯基準)の全馬順位です。会場・距離を問わず、距離を横断した総合力の高さを示します。</p>
+<div class="period-row" id="surfaceTabRow">
+  <button class="period-btn active" data-surface="turf" onclick="changeSurfaceTab('turf')">芝</button>
+  <button class="period-btn" data-surface="dirt" onclick="changeSurfaceTab('dirt')">ダート</button>
+</div>
 <div class="period-row" id="bucketTabRow">
   <button class="period-btn active" data-bucket="all" onclick="changeBucketTab('all')">全体</button>
 </div>
@@ -51,7 +55,10 @@ let cellIndex = {};
 let currentPeriod = 'all';
 let totalTop100Data = null;
 let bucketRankingData = null;
+let totalTop100DataDirt = null;
+let bucketRankingDataDirt = null;
 let currentBucketTab = 'all';
+let currentSurfaceTab = 'turf';
 
 fetch('af_ranking.json').then(r => r.json()).then(data => {
   rankingData = data;
@@ -81,28 +88,21 @@ function renderTotalRankingList(entries, showBucket) {
   document.getElementById('totalRankingResult').innerHTML = html || '<div class="loading">データがまだありません</div>';
 }
 
-function changeBucketTab(bucketKey) {
-  currentBucketTab = bucketKey;
-  document.querySelectorAll('#bucketTabRow .period-btn').forEach(b => b.classList.remove('active'));
-  document.querySelector('#bucketTabRow [data-bucket="' + CSS.escape(bucketKey) + '"]').classList.add('active');
-  if (bucketKey === 'all') {
-    renderTotalRankingList(totalTop100Data || [], true);
-  } else {
-    renderTotalRankingList((bucketRankingData && bucketRankingData[bucketKey]) || [], false);
-  }
+// 2026/7/23確定(成果117、TAISUKE提案): 芝・ダート切り替えタブを新設
+function changeSurfaceTab(surfaceKey) {
+  currentSurfaceTab = surfaceKey;
+  document.querySelectorAll('#surfaceTabRow .period-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('#surfaceTabRow [data-surface="' + surfaceKey + '"]').classList.add('active');
+  rebuildBucketTabs();
+  changeBucketTab('all');
 }
 
-fetch('total_ranking_top100.json').then(r => r.json()).then(data => {
-  totalTop100Data = data;
-  if (currentBucketTab === 'all') renderTotalRankingList(data, true);
-}).catch(() => {
-  document.getElementById('totalRankingResult').innerHTML = '<div class="loading">データがまだありません</div>';
-});
-
-fetch('bucket_total_ranking.json').then(r => r.json()).then(data => {
-  bucketRankingData = data;
+function rebuildBucketTabs() {
   const tabRow = document.getElementById('bucketTabRow');
-  Object.keys(data).forEach(bucketKey => {
+  tabRow.innerHTML = '<button class="period-btn active" data-bucket="all" onclick="changeBucketTab(\'all\')">全体</button>';
+  const bucketData = currentSurfaceTab === 'dirt' ? bucketRankingDataDirt : bucketRankingData;
+  if (!bucketData) return;
+  Object.keys(bucketData).forEach(bucketKey => {
     const btn = document.createElement('button');
     btn.className = 'period-btn';
     btn.dataset.bucket = bucketKey;
@@ -110,6 +110,40 @@ fetch('bucket_total_ranking.json').then(r => r.json()).then(data => {
     btn.onclick = function() { changeBucketTab(bucketKey); };
     tabRow.appendChild(btn);
   });
+}
+
+function changeBucketTab(bucketKey) {
+  currentBucketTab = bucketKey;
+  document.querySelectorAll('#bucketTabRow .period-btn').forEach(b => b.classList.remove('active'));
+  const targetBtn = document.querySelector('#bucketTabRow [data-bucket="' + CSS.escape(bucketKey) + '"]');
+  if (targetBtn) targetBtn.classList.add('active');
+  const totalData = currentSurfaceTab === 'dirt' ? totalTop100DataDirt : totalTop100Data;
+  const bucketData = currentSurfaceTab === 'dirt' ? bucketRankingDataDirt : bucketRankingData;
+  if (bucketKey === 'all') {
+    renderTotalRankingList(totalData || [], true);
+  } else {
+    renderTotalRankingList((bucketData && bucketData[bucketKey]) || [], false);
+  }
+}
+
+fetch('total_ranking_top100.json').then(r => r.json()).then(data => {
+  totalTop100Data = data;
+  if (currentSurfaceTab === 'turf' && currentBucketTab === 'all') renderTotalRankingList(data, true);
+}).catch(() => {
+  document.getElementById('totalRankingResult').innerHTML = '<div class="loading">データがまだありません</div>';
+});
+
+fetch('bucket_total_ranking.json').then(r => r.json()).then(data => {
+  bucketRankingData = data;
+  if (currentSurfaceTab === 'turf') rebuildBucketTabs();
+}).catch(() => {});
+
+fetch('total_ranking_top100_dirt.json').then(r => r.json()).then(data => {
+  totalTop100DataDirt = data;
+}).catch(() => {});
+
+fetch('bucket_total_ranking_dirt.json').then(r => r.json()).then(data => {
+  bucketRankingDataDirt = data;
 }).catch(() => {});
 
 
