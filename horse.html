@@ -146,7 +146,7 @@ function showHorseDetail(name) {
       const rangeLabel = rangeMatch ? rangeMatch[1] + 'm' : ratingsEntry.bestBucket;
       bucketRankStr = '　' + rangeLabel + ' ' + ratingsEntry.bucketRank + '／' + ratingsEntry.bucketN + '位';
     }
-    const totalLine = '<div style="font-size:13px; margin-bottom:2px;">全体 ' + ratingsEntry.totalRank + '／' + ratingsEntry.totalN + '位' + bucketRankStr + '</div>';
+    const totalLine = '<div style="font-size:13px; margin-bottom:2px;">総合力 ' + ratingsEntry.total + '点　全体 ' + ratingsEntry.totalRank + '／' + ratingsEntry.totalN + '位' + bucketRankStr + '</div>';
     const bestCondition = horseBestConditions && horseBestConditions[name];
     const conditionLine = bestCondition ? '<div style="font-size:13px; margin-bottom:8px;">得意条件：' + bestCondition + '</div>' : '';
     html += typeBadgeLine + totalLine + conditionLine;
