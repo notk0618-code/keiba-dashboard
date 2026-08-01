@@ -138,8 +138,15 @@ function showHorseDetail(name) {
     let maxIdx = 0;
     for (let i = 1; i < ratings.length; i++) { if (ratings[i] > ratings[maxIdx]) maxIdx = i; }
     const typeBadgeLine = '<div style="margin-bottom:2px;"><span class="type-badge" style="font-size:12px; background:#333; color:#fff; padding:2px 8px; border-radius:10px;" title="走破スタイル・レーダーチャートの最高軸(' + ratings[maxIdx] + '点)">' + typeAxisLabels[maxIdx] + '</span></div>';
-    const bucketRankStr = (ratingsEntry.bucketRank && ratingsEntry.bucketN) ? ('　得意距離順位 ' + ratingsEntry.bestBucket + '内' + ratingsEntry.bucketRank + '/' + ratingsEntry.bucketN + '位') : '';
-    const totalLine = '<div style="font-size:13px; margin-bottom:2px;">総合力 ' + ratingsEntry.total + '　全体順位 ' + ratingsEntry.totalRank + '/' + ratingsEntry.totalN + '位' + bucketRankStr + '</div>';
+    // 2026/7/23確定(成果111、TAISUKE提案): 改行させず、距離帯名の代わりに
+    // 実際の距離レンジ(例:1400-1600m)を使って、1行にコンパクトにまとめる
+    let bucketRankStr = '';
+    if (ratingsEntry.bucketRank && ratingsEntry.bucketN) {
+      const rangeMatch = ratingsEntry.bestBucket.match(/\(([^)]+)\)/);
+      const rangeLabel = rangeMatch ? rangeMatch[1] + 'm' : ratingsEntry.bestBucket;
+      bucketRankStr = '　' + rangeLabel + ' ' + ratingsEntry.bucketRank + '／' + ratingsEntry.bucketN + '位';
+    }
+    const totalLine = '<div style="font-size:13px; margin-bottom:2px;">全体 ' + ratingsEntry.totalRank + '／' + ratingsEntry.totalN + '位' + bucketRankStr + '</div>';
     const bestCondition = horseBestConditions && horseBestConditions[name];
     const conditionLine = bestCondition ? '<div style="font-size:13px; margin-bottom:8px;">得意条件：' + bestCondition + '</div>' : '';
     html += typeBadgeLine + totalLine + conditionLine;
