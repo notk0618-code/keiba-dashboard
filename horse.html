@@ -41,15 +41,26 @@ function loadData() {
   if (loadingPromise) return loadingPromise;
   document.getElementById('resultsArea').innerHTML = '<div class="loading">データ読み込み中(初回のみ時間がかかります)…</div>';
   const dataPromise = fetch('horse_data.json').then(r => r.json());
+  // 2026/7/23確定(成果132、TAISUKE提案): 2016-2020年分の取り込みにより
+  // horse_data.jsonがGitHub APIのアップロード上限を超えたため、
+  // 「直近版(horse_data.json)」と「過去版(horse_data_archive.json)」の
+  // 2ファイルに分割した。両方を取得し、馬ごとにマージする
+  const archiveDataPromise = fetch('horse_data_archive.json').then(r => r.json()).catch(() => ({}));
   const ratingsPromise = fetch('horse_ratings.json').then(r => r.json()).catch(() => ({}));
   const ratingsDirtPromise = fetch('horse_ratings_dirt.json').then(r => r.json()).catch(() => ({}));
   const conditionsPromise = fetch('horse_best_conditions.json').then(r => r.json()).catch(() => ({}));
-  loadingPromise = Promise.all([dataPromise, ratingsPromise, ratingsDirtPromise, conditionsPromise]).then(([data, ratings, ratingsDirt, conditions]) => {
-    horseData = data;
+  loadingPromise = Promise.all([dataPromise, archiveDataPromise, ratingsPromise, ratingsDirtPromise, conditionsPromise]).then(([data, archiveData, ratings, ratingsDirt, conditions]) => {
+    // 直近版・過去版をマージ(各馬、直近→過去の順に既にソート済みのため、
+    // 単純に連結するだけで、日付降順が維持される)
+    const mergedData = Object.assign({}, data);
+    Object.keys(archiveData).forEach(name => {
+      mergedData[name] = mergedData[name] ? mergedData[name].concat(archiveData[name]) : archiveData[name];
+    });
+    horseData = mergedData;
     horseRatings = ratings;
     horseRatingsDirt = ratingsDirt;
     horseBestConditions = conditions;
-    return data;
+    return mergedData;
   });
   return loadingPromise;
 }
