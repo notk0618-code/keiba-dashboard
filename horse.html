@@ -95,7 +95,7 @@ function buildRadarChartSvg(ratings) {
 }
 
 function raceRowHtml(e) {
-  const [date, venue, distance, raceName, finish, weight, track, surface, af, pace, dashDate, rNum, archiveKey, horseType, afTopPct, rankBadge, af3katsu] = e;
+  const [date, venue, distance, raceName, finish, weight, track, surface, af, pace, dashDate, rNum, archiveKey, horseType, afTopPct, rankBadge, af3katsu, raceStyle, finishTime, agari3f] = e;
   let raceNameDisplay = raceName;
   if (archiveKey) {
     raceNameDisplay = '<a href="race.html?key=' + encodeURIComponent(archiveKey) + '">' + raceName + '</a>';
@@ -110,9 +110,26 @@ function raceRowHtml(e) {
     const af3kStr = (af3katsu !== undefined && af3katsu !== null) ? ' <span class="af-badge ' + (af3katsu < 0 ? 'af-good' : 'af-bad') + '" style="font-size:10px;">3勝クラス基準AF ' + af3katsu.toFixed(2) + '%</span>' : '';
     afDisplay = '<span class="af-badge ' + cls + '">AF ' + af.toFixed(2) + '%' + pctStr + '</span>' + badgeStr + af3kStr;
   }
+  // 2026/7/23確定(成果130、TAISUKE提案): ペースの隣に、脚質・走破時計・上り3Fを追加。
+  // 見やすさのため、これらは改行して2行目に表示する
+  function formatFinishTime(sec) {
+    if (sec === null || sec === undefined) return null;
+    const m = Math.floor(sec / 60);
+    const s = (sec - m * 60).toFixed(1);
+    return m + ':' + (s < 10 ? '0' : '') + s;
+  }
+  const styleLabelMap = {'逃':'逃げ', '先':'先行', '差':'差し', '追':'追込'};
+  const styleStr = raceStyle ? (styleLabelMap[raceStyle] || raceStyle) : '';
+  const timeStr = formatFinishTime(finishTime);
+  const agariStr = (agari3f !== null && agari3f !== undefined) ? agari3f.toFixed(1) + 's' : '';
   let paceDisplay = pace ? ' / ' + pace : '';
+  const extraLine = (styleStr || timeStr || agariStr)
+    ? '<div style="font-size:11px; color:#777; margin-top:2px;">' +
+      [styleStr, timeStr ? '走破' + timeStr : '', agariStr ? '上り3F ' + agariStr : ''].filter(Boolean).join(' / ') +
+      '</div>'
+    : '';
   return '<div class="race-row">' + date + ' ' + venue + distance + 'm(' + surface + ') ' +
-         raceNameDisplay + ' / ' + finish + '着 / 馬場:' + (track || '-') + paceDisplay + afDisplay + '</div>';
+         raceNameDisplay + ' / ' + finish + '着 / 馬場:' + (track || '-') + paceDisplay + afDisplay + extraLine + '</div>';
 }
 
 function showHorseDetail(name) {
