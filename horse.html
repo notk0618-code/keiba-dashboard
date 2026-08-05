@@ -108,6 +108,31 @@ function buildRadarChartSvg(ratings, customLabels) {
   </svg>`;
 }
 
+function buildParameterBars(ratings, customLabels) {
+  // 2026/7/23確定(成果134、TAISUKE提案): 3軸化(成果133)により、三角形の
+  // レーダーチャートは見た目のバランスが悪く分かりにくいとの指摘を受け、
+  // パラメータバー形式に変更した。100点満点の横棒グラフで、各軸の値を
+  // 直感的に比較できるようにする
+  const defaultLabels3 = ['先行力','キレ','展開耐性'];
+  const labels = customLabels || defaultLabels3;
+  let html = '<div style="padding:6px 12px; max-width:280px; margin:0 auto;">';
+  for (let i = 0; i < ratings.length; i++) {
+    const pct = Math.max(0, Math.min(100, ratings[i]));
+    const barColor = pct >= 70 ? '#ff6600' : (pct >= 50 ? '#ffb066' : '#ccc');
+    html += `
+      <div style="margin-bottom:8px;">
+        <div style="display:flex; justify-content:space-between; font-size:12px; color:#555; margin-bottom:2px;">
+          <span>${labels[i]}</span><span style="font-weight:bold;">${ratings[i]}</span>
+        </div>
+        <div style="background:#eee; border-radius:5px; height:10px; overflow:hidden;">
+          <div style="background:${barColor}; width:${pct}%; height:100%; border-radius:5px;"></div>
+        </div>
+      </div>`;
+  }
+  html += '</div>';
+  return html;
+}
+
 function raceRowHtml(e) {
   const [date, venue, distance, raceName, finish, weight, track, surface, af, pace, dashDate, rNum, archiveKey, horseType, afTopPct, rankBadge, af3katsu, raceStyle, finishTime, agari3f] = e;
   let raceNameDisplay = raceName;
@@ -166,16 +191,16 @@ function showHorseDetail(name) {
   // 2026/7/23追加(成果117、TAISUKE提案): ダート版レーダーチャートにも対応し、
   // 芝・ダート両方のデータがあれば、両方のブロックを表示するよう拡張。
   // 2026/7/23追加(成果133、TAISUKE提案): 芝は3軸(先行力・キレ・展開耐性)に
-  // 全面刷新。ダートは5軸のまま維持しているため、配列の長さで判定して
-  // タイプラベルを切り替える。芝にはコーナリング加速力の別枠バッジも追加
+  // 全面刷新。2026/7/23追加(成果135): ダートも同じ3軸ロジックに統一したため、
+  // 5軸ラベルは廃止した。2026/7/23追加(成果134、TAISUKE提案): 三角形の
+  // レーダーチャートは見た目のバランスが悪いため、パラメータバー形式に変更した
   let html = '<a href="#" onclick="renderSearchResults(document.getElementById(\'searchBox\').value); return false;" class="back-link">‹ 検索結果に戻る</a>';
-  const typeAxisLabels5 = ['🏃基礎スピード型','✨キレ型','💪持続力型','🔋ポテンシャル型','🚀ギアチェンジ型'];
   const typeAxisLabels3 = ['🏃先行力型','✨キレ型','🎯展開耐性型'];
 
   function buildRadarBlock(ratingsEntry, surfaceLabel) {
     if (!ratingsEntry || !ratingsEntry.ratings) return '';
     const ratings = ratingsEntry.ratings;
-    const typeAxisLabels = ratings.length === 3 ? typeAxisLabels3 : typeAxisLabels5;
+    const typeAxisLabels = typeAxisLabels3;
     let maxIdx = 0;
     for (let i = 1; i < ratings.length; i++) { if (ratings[i] > ratings[maxIdx]) maxIdx = i; }
     const surfaceTag = '<span style="font-size:11px; color:#888; margin-right:4px;">[' + surfaceLabel + ']</span>';
@@ -191,8 +216,8 @@ function showHorseDetail(name) {
     }
     const totalLine = '<div style="font-size:13px; margin-bottom:2px;">総合力 ' + ratingsEntry.total + '点　全体 ' + ratingsEntry.totalRank + '／' + ratingsEntry.totalN + '位' + bucketRankStr + '</div>';
     let block = typeBadgeLine + totalLine;
-    block += '<div style="text-align:center; background:#fafafa; border:1px solid #eee; border-radius:8px; padding:8px; margin-bottom:12px;">' +
-             buildRadarChartSvg(ratings) + '</div>';
+    block += '<div style="background:#fafafa; border:1px solid #eee; border-radius:8px; padding:10px; margin-bottom:12px;">' +
+             buildParameterBars(ratings) + '</div>';
     return block;
   }
 
