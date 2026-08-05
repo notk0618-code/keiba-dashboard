@@ -65,13 +65,16 @@ function loadData() {
   return loadingPromise;
 }
 
-function buildRadarChartSvg(ratings) {
-  // ratings: [基礎スピード,キレ,持続力,ポテンシャル,ギアチェンジ] 各1-100(成果84で100点満点化)
-  // 2026/7/23修正(成果84): viewBoxが狭すぎて、左右のラベル(キレ・ギアチェンジ)が
-  // 見切れるバグを修正。viewBoxを拡張し、半径・ラベル距離を調整した
-  const labels = ['基礎スピード','キレ','持続力','ポテンシャル','ギア'];
+function buildRadarChartSvg(ratings, customLabels) {
+  // 2026/7/23確定(成果133、TAISUKE提案): 芝は3軸(先行力・キレ・展開耐性)に
+  // 全面刷新。ダートは、既存の5軸(基礎スピード・キレ・持続力・ポテンシャル・
+  // ギアチェンジ)のまま維持しているため、この関数はratings配列の長さに応じて、
+  // 3軸(三角形)・5軸(五角形)の両方に対応する汎用設計にした
+  const defaultLabels5 = ['基礎スピード','キレ','持続力','ポテンシャル','ギア'];
+  const defaultLabels3 = ['先行力','キレ','展開耐性'];
+  const n = ratings.length;
+  const labels = customLabels || (n === 3 ? defaultLabels3 : defaultLabels5);
   const cx = 110, cy = 100, maxR = 62;
-  const n = 5;
   const points = ratings.map((v, i) => {
     const angle = (Math.PI * 2 * i / n) - Math.PI / 2;
     const r = maxR * (v / 100);
@@ -161,17 +164,25 @@ function showHorseDetail(name) {
   // ②総合力・全体順位・得意距離順位、③得意条件(距離・馬場・ペース)、の
   // 3行構成に全面再構成。従来のAF平均バッジ・得意距離レンジ表示は削除。
   // 2026/7/23追加(成果117、TAISUKE提案): ダート版レーダーチャートにも対応し、
-  // 芝・ダート両方のデータがあれば、両方のブロックを表示するよう拡張
+  // 芝・ダート両方のデータがあれば、両方のブロックを表示するよう拡張。
+  // 2026/7/23追加(成果133、TAISUKE提案): 芝は3軸(先行力・キレ・展開耐性)に
+  // 全面刷新。ダートは5軸のまま維持しているため、配列の長さで判定して
+  // タイプラベルを切り替える。芝にはコーナリング加速力の別枠バッジも追加
   let html = '<a href="#" onclick="renderSearchResults(document.getElementById(\'searchBox\').value); return false;" class="back-link">‹ 検索結果に戻る</a>';
-  const typeAxisLabels = ['🏃基礎スピード型','✨キレ型','💪持続力型','🔋ポテンシャル型','🚀ギアチェンジ型'];
+  const typeAxisLabels5 = ['🏃基礎スピード型','✨キレ型','💪持続力型','🔋ポテンシャル型','🚀ギアチェンジ型'];
+  const typeAxisLabels3 = ['🏃先行力型','✨キレ型','🎯展開耐性型'];
 
   function buildRadarBlock(ratingsEntry, surfaceLabel) {
     if (!ratingsEntry || !ratingsEntry.ratings) return '';
     const ratings = ratingsEntry.ratings;
+    const typeAxisLabels = ratings.length === 3 ? typeAxisLabels3 : typeAxisLabels5;
     let maxIdx = 0;
     for (let i = 1; i < ratings.length; i++) { if (ratings[i] > ratings[maxIdx]) maxIdx = i; }
     const surfaceTag = '<span style="font-size:11px; color:#888; margin-right:4px;">[' + surfaceLabel + ']</span>';
-    const typeBadgeLine = '<div style="margin-bottom:2px;">' + surfaceTag + '<span class="type-badge" style="font-size:12px; background:#333; color:#fff; padding:2px 8px; border-radius:10px;" title="走破スタイル・レーダーチャートの最高軸(' + ratings[maxIdx] + '点)">' + typeAxisLabels[maxIdx] + '</span></div>';
+    const corneringStr = (ratingsEntry.corneringPower !== undefined && ratingsEntry.corneringPower !== null)
+      ? ' <span class="type-badge" style="font-size:12px; background:#0a7d3c; color:#fff; padding:2px 8px; border-radius:10px;" title="3角→4角の順位変動から算出、総合力には含まれない">🌀コーナリング加速力 ' + ratingsEntry.corneringPower + '</span>'
+      : '';
+    const typeBadgeLine = '<div style="margin-bottom:2px;">' + surfaceTag + '<span class="type-badge" style="font-size:12px; background:#333; color:#fff; padding:2px 8px; border-radius:10px;" title="走破スタイル・レーダーチャートの最高軸(' + ratings[maxIdx] + '点)">' + typeAxisLabels[maxIdx] + '</span>' + corneringStr + '</div>';
     let bucketRankStr = '';
     if (ratingsEntry.bucketRank && ratingsEntry.bucketN) {
       const rangeMatch = ratingsEntry.bestBucket.match(/\(([^)]+)\)/);
