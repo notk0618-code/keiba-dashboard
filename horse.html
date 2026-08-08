@@ -35,6 +35,7 @@ let horseData = null;
 let horseRatings = null;
 let horseRatingsDirt = null;
 let horseBestConditions = null;
+let horseSexAge = null;
 let loadingPromise = null;
 
 function loadData() {
@@ -49,7 +50,9 @@ function loadData() {
   const ratingsPromise = fetch('horse_ratings.json').then(r => r.json()).catch(() => ({}));
   const ratingsDirtPromise = fetch('horse_ratings_dirt.json').then(r => r.json()).catch(() => ({}));
   const conditionsPromise = fetch('horse_best_conditions.json').then(r => r.json()).catch(() => ({}));
-  loadingPromise = Promise.all([dataPromise, archiveDataPromise, ratingsPromise, ratingsDirtPromise, conditionsPromise]).then(([data, archiveData, ratings, ratingsDirt, conditions]) => {
+  // 2026/7/23確定(成果147、TAISUKE提案): 性別・年齢の軽量な別ファイル
+  const sexAgePromise = fetch('horse_sex_age.json').then(r => r.json()).catch(() => ({}));
+  loadingPromise = Promise.all([dataPromise, archiveDataPromise, ratingsPromise, ratingsDirtPromise, conditionsPromise, sexAgePromise]).then(([data, archiveData, ratings, ratingsDirt, conditions, sexAge]) => {
     // 直近版・過去版をマージ(各馬、直近→過去の順に既にソート済みのため、
     // 単純に連結するだけで、日付降順が維持される)
     const mergedData = Object.assign({}, data);
@@ -60,6 +63,7 @@ function loadData() {
     horseRatings = ratings;
     horseRatingsDirt = ratingsDirt;
     horseBestConditions = conditions;
+    horseSexAge = sexAge;
     return mergedData;
   });
   return loadingPromise;
@@ -221,7 +225,14 @@ function showHorseDetail(name) {
     return block;
   }
 
-  html += '<h2>' + name + '(' + races.length + '走)</h2>';
+  // 2026/7/23確定(成果146・147、TAISUKE提案): 馬名の隣に性別・年齢を表示する。
+  // 軽量な別ファイル(horse_sex_age.json、[日付,性別,年齢]形式)から取得する
+  let sexAgeHeaderStr = '';
+  const sexAgeEntry = horseSexAge && horseSexAge[name];
+  if (sexAgeEntry) {
+    sexAgeHeaderStr = '(' + sexAgeEntry[1] + sexAgeEntry[2] + ')';
+  }
+  html += '<h2>' + name + sexAgeHeaderStr + '(' + races.length + '走)</h2>';
   const ratingsEntryTurf = horseRatings && horseRatings[name];
   const ratingsEntryDirt = horseRatingsDirt && horseRatingsDirt[name];
   html += buildRadarBlock(ratingsEntryTurf, '芝');
