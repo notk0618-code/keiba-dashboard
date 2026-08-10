@@ -1,5 +1,5 @@
 <html><head><meta charset="utf-8"><meta name="robots" content="noindex, nofollow">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1"><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="icon" type="image/png" sizes="192x192" href="icon-192.png"><link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png"><link rel="manifest" href="manifest.json"><meta name="theme-color" content="#ff6600">
 <style>
   body { font-family: sans-serif; background:#f5f5f5; margin:0; padding:12px; max-width:520px; margin-left:auto; margin-right:auto; box-sizing:border-box; }
   .period-row { display:flex; gap:8px; margin-bottom:16px; }
@@ -46,7 +46,8 @@
   }).catch(() => {});
 })();
 </script>
-<h2>🏆 会場別AFランキング</h2>
+<h2 id="venue-ranking">🏆 会場別AFランキング</h2>
+<a href="#total-ranking" style="font-size:12px; color:#0645AD;">▼ 総合力ランキングへ移動</a>
 <div class="period-row">
   <button class="period-btn active" id="btn-all" onclick="changePeriod('all')">全期間</button>
   <button class="period-btn" id="btn-3y" onclick="changePeriod('3y')">直近3年</button>
@@ -55,8 +56,9 @@
 <div id="grid"><div class="loading">読み込み中…</div></div>
 <div id="rankingResult"></div>
 
-<h2 style="margin-top:28px;">💯 総合力ランキングTop100</h2>
-<p style="font-size:12px; color:#666; margin-top:-4px;">走破スタイル・レーダーチャート(5項目合計・ベスト距離帯基準)の全馬順位です。会場・距離を問わず、距離を横断した総合力の高さを示します。</p>
+<h2 id="total-ranking" style="margin-top:28px;">💯 総合力ランキングTop100</h2>
+<a href="#venue-ranking" style="font-size:12px; color:#0645AD;">▲ 会場別ランキングへ戻る</a>
+<p style="font-size:12px; color:#666; margin-top:4px;">走破スタイル・レーダーチャート(5項目合計・ベスト距離帯基準)の全馬順位です。会場・距離を問わず、距離を横断した総合力の高さを示します。</p>
 <div class="period-row" id="surfaceTabRow">
   <button class="period-btn active" data-surface="turf" onclick="changeSurfaceTab('turf')">芝</button>
   <button class="period-btn" data-surface="dirt" onclick="changeSurfaceTab('dirt')">ダート</button>
@@ -89,7 +91,10 @@ fetch('af_ranking.json').then(r => r.json()).then(data => {
     if (!cellIndex[venue]) cellIndex[venue] = [];
     cellIndex[venue].push({surface: surface, distance: parseInt(distance), key: k});
   });
-  Object.keys(cellIndex).forEach(v => cellIndex[v].sort((a,b) => (a.surface > b.surface ? 1 : -1) || a.distance - b.distance));
+  // 2026/7/23確定(成果153、TAISUKE提案): 芝を先頭・ダートを後、距離は短い順に
+  // 明示的に並べる(以前は文字コード比較により、意図せずダートが先頭に来ていた)
+  const surfaceOrder = { '芝': 0, 'ダート': 1 };
+  Object.keys(cellIndex).forEach(v => cellIndex[v].sort((a,b) => (surfaceOrder[a.surface] - surfaceOrder[b.surface]) || a.distance - b.distance));
   renderGrid();
 });
 
