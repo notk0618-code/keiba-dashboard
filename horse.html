@@ -1,5 +1,5 @@
 <html><head><meta charset="utf-8"><meta name="robots" content="noindex, nofollow">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1"><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="icon" type="image/png" sizes="192x192" href="icon-192.png"><link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png"><link rel="manifest" href="manifest.json"><meta name="theme-color" content="#ff6600">
 <style>
   body { font-family: sans-serif; background:#f5f5f5; margin:0; padding:12px; max-width:520px; margin-left:auto; margin-right:auto; box-sizing:border-box; }
   input[type=text] { width:100%; box-sizing:border-box; padding:10px; font-size:16px; border:1px solid #ccc; border-radius:8px; margin-bottom:12px; }
@@ -155,7 +155,7 @@ function buildParameterBars(ratings, customLabels) {
 }
 
 function raceRowHtml(e) {
-  const [date, venue, distance, raceName, finish, weight, track, surface, af, pace, dashDate, rNum, archiveKey, horseType, afTopPct, rankBadge, af3katsu, raceStyle, finishTime, agari3f] = e;
+  const [date, venue, distance, raceName, finish, weight, track, surface, af, pace, dashDate, rNum, archiveKey, horseType, afTopPct, rankBadge, af3katsu, raceStyle, finishTime, agari3f, front3f, back3f, front4f, back4f, jockey] = e;
   let raceNameDisplay = raceName;
   if (archiveKey) {
     raceNameDisplay = '<a href="race.html?key=' + encodeURIComponent(archiveKey) + '">' + raceName + '</a>';
@@ -171,7 +171,9 @@ function raceRowHtml(e) {
     afDisplay = '<span class="af-badge ' + cls + '">AF ' + af.toFixed(2) + '%' + pctStr + '</span>' + badgeStr + af3kStr;
   }
   // 2026/7/23確定(成果130、TAISUKE提案): ペースの隣に、脚質・走破時計・上り3Fを追加。
-  // 見やすさのため、これらは改行して2行目に表示する
+  // 見やすさのため、これらは改行して2行目に表示する。
+  // 2026/7/23追加(成果155、TAISUKE提案): 騎手・前後半3F/4F(ラップ補正後)を、
+  // 3行目に追加表示する
   function formatFinishTime(sec) {
     if (sec === null || sec === undefined) return null;
     const m = Math.floor(sec / 60);
@@ -188,8 +190,16 @@ function raceRowHtml(e) {
       [styleStr, timeStr ? '走破' + timeStr : '', agariStr ? '上り3F ' + agariStr : ''].filter(Boolean).join(' / ') +
       '</div>'
     : '';
+  const splitStr = (front3f !== undefined && front3f !== null && back3f !== undefined && back3f !== null)
+    ? '前3F ' + front3f.toFixed(1) + 's/後3F ' + back3f.toFixed(1) + 's/前4F ' + front4f.toFixed(1) + 's/後4F ' + back4f.toFixed(1) + 's' : '';
+  const jockeyStr = jockey ? '騎手:' + jockey : '';
+  const extraLine2 = (splitStr || jockeyStr)
+    ? '<div style="font-size:11px; color:#777; margin-top:2px;">' +
+      [jockeyStr, splitStr].filter(Boolean).join(' / ') +
+      '</div>'
+    : '';
   return '<div class="race-row">' + date + ' ' + venue + distance + 'm(' + surface + ') ' +
-         raceNameDisplay + ' / ' + finish + '着 / 馬場:' + (track || '-') + paceDisplay + afDisplay + extraLine + '</div>';
+         raceNameDisplay + ' / ' + finish + '着 / 馬場:' + (track || '-') + paceDisplay + afDisplay + extraLine + extraLine2 + '</div>';
 }
 
 function showHorseDetail(name) {
