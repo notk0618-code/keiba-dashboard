@@ -53,6 +53,7 @@ let horseRatings = null;
 let horseRatingsDirt = null;
 let horseBestConditions = null;
 let horseSexAge = null;
+let horseExtraStats = null;
 let loadingPromise = null;
 
 function loadData() {
@@ -69,7 +70,11 @@ function loadData() {
   const conditionsPromise = fetch('horse_best_conditions.json').then(r => r.json()).catch(() => ({}));
   // 2026/7/23確定(成果147、TAISUKE提案): 性別・年齢の軽量な別ファイル
   const sexAgePromise = fetch('horse_sex_age.json').then(r => r.json()).catch(() => ({}));
-  loadingPromise = Promise.all([dataPromise, archiveDataPromise, ratingsPromise, ratingsDirtPromise, conditionsPromise, sexAgePromise]).then(([data, archiveData, ratings, ratingsDirt, conditions, sexAge]) => {
+  // 2026/7/23確定(成果161、TAISUKE提案): 前後半3F/4F・騎手の軽量な別ファイル
+  // (直近版・過去版の2ファイル)
+  const extraStatsPromise = fetch('horse_extra_stats.json').then(r => r.json()).catch(() => ({}));
+  const extraStatsArchivePromise = fetch('horse_extra_stats_archive.json').then(r => r.json()).catch(() => ({}));
+  loadingPromise = Promise.all([dataPromise, archiveDataPromise, ratingsPromise, ratingsDirtPromise, conditionsPromise, sexAgePromise, extraStatsPromise, extraStatsArchivePromise]).then(([data, archiveData, ratings, ratingsDirt, conditions, sexAge, extraStats, extraStatsArchive]) => {
     // 直近版・過去版をマージ(各馬、直近→過去の順に既にソート済みのため、
     // 単純に連結するだけで、日付降順が維持される)
     const mergedData = Object.assign({}, data);
@@ -81,6 +86,7 @@ function loadData() {
     horseRatingsDirt = ratingsDirt;
     horseBestConditions = conditions;
     horseSexAge = sexAge;
+    horseExtraStats = Object.assign({}, extraStats, extraStatsArchive);
     return mergedData;
   });
   return loadingPromise;
@@ -154,8 +160,14 @@ function buildParameterBars(ratings, customLabels) {
   return html;
 }
 
-function raceRowHtml(e) {
-  const [date, venue, distance, raceName, finish, weight, track, surface, af, pace, dashDate, rNum, archiveKey, horseType, afTopPct, rankBadge, af3katsu, raceStyle, finishTime, agari3f, front3f, back3f, front4f, back4f, jockey] = e;
+function raceRowHtml(e, horseName) {
+  const [date, venue, distance, raceName, finish, weight, track, surface, af, pace, dashDate, rNum, archiveKey, horseType, afTopPct, rankBadge, af3katsu, raceStyle, finishTime, agari3f] = e;
+  // 2026/7/23確定(成果161、TAISUKE提案): 前後半3F/4F・騎手は、サイズ超過を
+  // 避けるため、entry配列ではなく、別ファイル(horseExtraStats)から
+  // 「馬名|日付|会場|レース番号」のキーで取得する
+  const extraKey = horseName + '|' + date + '|' + venue + '|' + rNum;
+  const extra = horseExtraStats && horseExtraStats[extraKey];
+  const [front3f, back3f, front4f, back4f, jockey] = extra || [null, null, null, null, null];
   let raceNameDisplay = raceName;
   if (archiveKey) {
     raceNameDisplay = '<a href="race.html?key=' + encodeURIComponent(archiveKey) + '">' + raceName + '</a>';
@@ -268,7 +280,7 @@ function showHorseDetail(name) {
   if (bestCondition) {
     html += '<div style="font-size:13px; margin-bottom:8px;">得意条件：' + bestCondition + '</div>';
   }
-  races.forEach(e => { html += raceRowHtml(e); });
+  races.forEach(e => { html += raceRowHtml(e, name); });
   document.getElementById('resultsArea').innerHTML = html;
 }
 
