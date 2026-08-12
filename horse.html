@@ -167,7 +167,7 @@ function raceRowHtml(e, horseName) {
   // 「馬名|日付|会場|レース番号」のキーで取得する
   const extraKey = horseName + '|' + date + '|' + venue + '|' + rNum;
   const extra = horseExtraStats && horseExtraStats[extraKey];
-  const [front3f, back3f, front4f, back4f, jockey] = extra || [null, null, null, null, null];
+  const [front3f, back3f, front4f, back4f, jockey, babaIndex] = extra || [null, null, null, null, null, null];
   let raceNameDisplay = raceName;
   if (archiveKey) {
     raceNameDisplay = '<a href="race.html?key=' + encodeURIComponent(archiveKey) + '">' + raceName + '</a>';
@@ -205,9 +205,12 @@ function raceRowHtml(e, horseName) {
   const splitStr = (front3f !== undefined && front3f !== null && back3f !== undefined && back3f !== null)
     ? '前3F ' + front3f.toFixed(1) + 's/後3F ' + back3f.toFixed(1) + 's/前4F ' + front4f.toFixed(1) + 's/後4F ' + back4f.toFixed(1) + 's' : '';
   const jockeyStr = jockey ? '騎手:' + jockey : '';
-  const extraLine2 = (splitStr || jockeyStr)
+  // 2026/7/23確定(成果162、TAISUKE提案): 馬場指数(その日・その会場の基準タイムからの
+  // 乖離率、AF計算の内部補正と同じ値)を、参考値として表示する
+  const babaStr = (babaIndex !== undefined && babaIndex !== null) ? '馬場指数' + (babaIndex >= 0 ? '+' : '') + babaIndex.toFixed(1) + '%' : '';
+  const extraLine2 = (splitStr || jockeyStr || babaStr)
     ? '<div style="font-size:11px; color:#777; margin-top:2px;">' +
-      [jockeyStr, splitStr].filter(Boolean).join(' / ') +
+      [jockeyStr, babaStr, splitStr].filter(Boolean).join(' / ') +
       '</div>'
     : '';
   return '<div class="race-row">' + date + ' ' + venue + distance + 'm(' + surface + ') ' +
