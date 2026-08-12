@@ -7,9 +7,9 @@
   .period-btn.active { background:#111; color:#fff; }
   .venue-header { background:#111; color:#fff; padding:8px 12px; border-radius:6px 6px 0 0; font-weight:bold; font-size:14px; margin-top:14px; }
   .badge-row { display:flex; flex-wrap:wrap; gap:6px; padding:10px; background:#fff; border:1px solid #ddd; border-top:none; border-radius:0 0 6px 6px; }
-  .badge { padding:6px 10px; border-radius:6px; font-size:12px; border:none; color:#fff; }
-  .badge.turf { background:#111; }
-  .badge.dirt { background:#8b4513; }
+  .badge { padding:6px 10px; border-radius:6px; font-size:12px; border:none; color:#333; }
+  .badge.turf { background:#e8f5e9; color:#4a7a4f; }
+  .badge.dirt { background:#f5ebe0; color:#8a6d4d; }
   .badge:disabled { background:#ccc; color:#888; }
   #rankingResult { margin-top:20px; }
   .rank-row { background:#fff; border:1px solid #ddd; border-radius:6px; padding:8px 10px; margin-bottom:6px; font-size:13px; display:flex; justify-content:space-between; }
@@ -172,18 +172,26 @@ fetch('bucket_total_ranking_dirt.json').then(r => r.json()).then(data => {
 function renderGrid() {
   let html = '';
   Object.keys(cellIndex).sort().forEach(venue => {
-    html += '<div class="venue-header">' + venue + '</div><div class="badge-row">';
-    cellIndex[venue].forEach(c => {
-      const hasData = rankingData[currentPeriod] && rankingData[currentPeriod][c.key] && rankingData[currentPeriod][c.key].length > 0;
-      const label = c.distance + 'm(' + c.surface + ')';
-      const cls = 'badge ' + (c.surface === '芝' ? 'turf' : 'dirt');
-      if (hasData) {
-        html += '<button class="' + cls + '" onclick="showRanking(\'' + c.key + '\')">' + label + '</button>';
-      } else {
-        html += '<button class="' + cls + '" disabled>' + label + '</button>';
-      }
+    html += '<div class="venue-header">' + venue + '</div>';
+    // 2026/7/23確定(成果160、TAISUKE提案): 「(芝)」「(ダート)」の表記が、
+    // ボタンごとに何度も繰り返され、見づらいとの指摘を受け、芝・ダートで
+    // グループ化し、見出しを1回だけ表示する形式に整理した
+    ['芝', 'ダート'].forEach(surfaceGroup => {
+      const items = cellIndex[venue].filter(c => c.surface === surfaceGroup);
+      if (items.length === 0) return;
+      html += '<div style="font-size:11px; color:#999; margin:4px 0 2px 2px;">' + surfaceGroup + '</div><div class="badge-row">';
+      items.forEach(c => {
+        const hasData = rankingData[currentPeriod] && rankingData[currentPeriod][c.key] && rankingData[currentPeriod][c.key].length > 0;
+        const label = c.distance + 'm';
+        const cls = 'badge ' + (c.surface === '芝' ? 'turf' : 'dirt');
+        if (hasData) {
+          html += '<button class="' + cls + '" onclick="showRanking(\'' + c.key + '\')">' + label + '</button>';
+        } else {
+          html += '<button class="' + cls + '" disabled>' + label + '</button>';
+        }
+      });
+      html += '</div>';
     });
-    html += '</div>';
   });
   document.getElementById('grid').innerHTML = html;
 }
