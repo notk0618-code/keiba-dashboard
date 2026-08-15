@@ -213,8 +213,16 @@ function raceRowHtml(e, horseName) {
       [jockeyStr, babaStr, splitStr].filter(Boolean).join(' / ') +
       '</div>'
     : '';
+  // 2026/7/23確定(成果167、TAISUKE提案): 1着の場合、黄色いボックスで
+  // 数字を強調表示し、過去の勝ち鞍を一目でわかりやすくする
+  // 2026/7/23確定(成果167バグ修正、TAISUKE提案): 着順が「1.0」のような
+  // 小数形式で保存されているケースがあり、文字列「1」との厳密一致では
+  // 検出できていなかった。数値変換して比較するよう修正
+  const finishDisplay = (parseFloat(finish) === 1)
+    ? '<span style="background:#ffd700; color:#333; font-weight:bold; padding:1px 6px; border-radius:4px;">' + finish + '</span>着'
+    : finish + '着';
   return '<div class="race-row">' + date + ' ' + venue + distance + 'm(' + surface + ') ' +
-         raceNameDisplay + ' / ' + finish + '着 / 馬場:' + (track || '-') + paceDisplay + afDisplay + extraLine + extraLine2 + '</div>';
+         raceNameDisplay + ' / ' + finishDisplay + ' / 馬場:' + (track || '-') + paceDisplay + afDisplay + extraLine + extraLine2 + '</div>';
 }
 
 function showHorseDetail(name) {
