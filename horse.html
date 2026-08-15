@@ -195,7 +195,7 @@ function raceRowHtml(e, horseName) {
   const styleLabelMap = {'逃':'逃げ', '先':'先行', '差':'差し', '追':'追込'};
   const styleStr = raceStyle ? (styleLabelMap[raceStyle] || raceStyle) : '';
   const timeStr = formatFinishTime(finishTime);
-  const agariStr = (agari3f !== null && agari3f !== undefined) ? agari3f.toFixed(1) + 's' : '';
+  const agariStr = (agari3f !== null && agari3f !== undefined) ? agari3f.toFixed(1) : '';
   let paceDisplay = pace ? ' / ' + pace : '';
   const extraLine = (styleStr || timeStr || agariStr)
     ? '<div style="font-size:11px; color:#777; margin-top:2px;">' +
@@ -203,7 +203,7 @@ function raceRowHtml(e, horseName) {
       '</div>'
     : '';
   const splitStr = (front3f !== undefined && front3f !== null && back3f !== undefined && back3f !== null)
-    ? '前3F ' + front3f.toFixed(1) + 's/後3F ' + back3f.toFixed(1) + 's/前4F ' + front4f.toFixed(1) + 's/後4F ' + back4f.toFixed(1) + 's' : '';
+    ? '前3F ' + front3f.toFixed(1) + '/後3F ' + back3f.toFixed(1) + '/前4F ' + front4f.toFixed(1) + '/後4F ' + back4f.toFixed(1) : '';
   const jockeyStr = jockey ? '騎手:' + jockey : '';
   // 2026/7/23確定(成果162、TAISUKE提案): 馬場指数(その日・その会場の基準タイムからの
   // 乖離率、AF計算の内部補正と同じ値)を、参考値として表示する
@@ -253,7 +253,16 @@ function showHorseDetail(name) {
     const corneringStr = (ratingsEntry.corneringPower !== undefined && ratingsEntry.corneringPower !== null)
       ? ' <span class="type-badge" style="font-size:12px; background:#0a7d3c; color:#fff; padding:2px 8px; border-radius:10px;" title="3角→4角の順位変動から算出、総合力には含まれない">🌀コーナリング加速力 ' + ratingsEntry.corneringPower + '</span>'
       : '';
-    const typeBadgeLine = '<div style="margin-bottom:2px;">' + surfaceTag + '<span class="type-badge" style="font-size:12px; background:#333; color:#fff; padding:2px 8px; border-radius:10px;" title="走破スタイル・レーダーチャートの最高軸(' + ratings[maxIdx] + '点)">' + typeAxisLabels[maxIdx] + '</span>' + corneringStr + '</div>';
+    // 2026/7/23確定(成果166、TAISUKE提案): 主・副の脚質バッジを、タイプ・
+    // コーナリング加速力の隣に追加する(捲り含む5分類、直近10走から判定)
+    let styleStr = '';
+    if (ratingsEntry.runningStyle && ratingsEntry.runningStyle[0]) {
+      const mainStyle = ratingsEntry.runningStyle[0];
+      const subStyle = ratingsEntry.runningStyle[1];
+      const styleLabel = mainStyle + (subStyle ? '(副:' + subStyle + ')' : '');
+      styleStr = ' <span class="type-badge" style="font-size:12px; background:#6a4c93; color:#fff; padding:2px 8px; border-radius:10px;" title="直近10走の脚質から判定(捲り含む5分類)">🏇' + styleLabel + '</span>';
+    }
+    const typeBadgeLine = '<div style="margin-bottom:2px;">' + surfaceTag + '<span class="type-badge" style="font-size:12px; background:#333; color:#fff; padding:2px 8px; border-radius:10px;" title="走破スタイル・レーダーチャートの最高軸(' + ratings[maxIdx] + '点)">' + typeAxisLabels[maxIdx] + '</span>' + corneringStr + styleStr + '</div>';
     let bucketRankStr = '';
     if (ratingsEntry.bucketRank && ratingsEntry.bucketN) {
       const rangeMatch = ratingsEntry.bestBucket.match(/\(([^)]+)\)/);
