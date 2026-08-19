@@ -1,0 +1,116 @@
+<html><head><meta charset="utf-8"><meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body { font-family: sans-serif; background:#f5f5f5; margin:0; padding:12px; max-width:520px; margin-left:auto; margin-right:auto; box-sizing:border-box; }
+  table { width:100%; border-collapse:collapse; background:white; border-radius:8px; overflow:hidden; }
+  th { background:#333; color:white; padding:8px; font-size:12px; text-align:left; }
+  .summary-card { background:white; border-radius:8px; padding:12px; margin-bottom:12px; display:flex; justify-content:space-around; text-align:center; }
+  .summary-card div .label { font-size:11px; color:#888; }
+  .summary-card div .value { font-size:20px; font-weight:bold; color:#ff6600; }
+</style></head><body><div id="top" style="background:#000; margin:-12px -12px 0 -12px; padding:14px 16px; border-bottom:3px solid #ff6600; display:flex; justify-content:space-between; align-items:center; font-family:sans-serif;">
+<a href="index.html" style="color:#fff; font-weight:bold; font-size:17px; letter-spacing:0.5px; text-decoration:none;">AF<span style="color:#ff6600;">Keiba</span>DATA</a>
+<div style="display:flex; gap:14px; align-items:center;">
+<a id="value-link-icon" href="index.html#value-ranking" style="color:#ff6600; text-decoration:none; font-size:16px;" title="本日の狙い目">🎯</a>
+<a id="confidence-link-icon" href="index.html#confidence-ranking" style="color:#ff6600; text-decoration:none; font-size:16px;" title="堅軸TOP10">🔥</a>
+<a href="ranking.html" style="color:#ddd; text-decoration:none; font-size:16px;" title="ランキング">🏆</a>
+<a href="calendar.html" style="color:#ddd; text-decoration:none; font-size:16px;" title="カレンダー">📅</a>
+<a href="horse.html" style="color:#ddd; text-decoration:none; font-size:16px;" title="馬名検索">🔍</a>
+<a href="review.html" style="color:#ddd; text-decoration:none; font-size:16px;" title="予想の振り返り">📊</a>
+</div>
+</div>
+<div style="height:14px;"></div>
+<script>
+(function() {
+  const d = new Date();
+  const yy = String(d.getFullYear()).slice(2);
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  const todayFile = 'dashboard_' + yy + mm + dd + '.html';
+  fetch(todayFile, { method: 'HEAD' }).then(res => {
+    if (res.ok) {
+      const vLink = document.getElementById('value-link-icon');
+      const cLink = document.getElementById('confidence-link-icon');
+      if (vLink) vLink.href = todayFile + '#value-ranking';
+      if (cLink) cLink.href = todayFile + '#confidence-ranking';
+    }
+  }).catch(() => {});
+})();
+</script>
+<h2>📊 予想の振り返り</h2>
+<div class="summary-card">
+  <div><div class="label">全期間・堅軸TOP10</div><div class="value">73.33%</div></div>
+  <div><div class="label">直近7日・堅軸TOP10</div><div class="value">73.33%</div></div>
+</div>
+<div class="summary-card">
+  <div><div class="label">全期間・指数トップ</div><div class="value" style="color:#333;">49.17%</div></div>
+  <div><div class="label">直近7日・指数トップ</div><div class="value" style="color:#333;">49.17%</div></div>
+</div>
+<div style="background:white; border-radius:8px; padding:12px; margin-bottom:12px;">
+  <div style="font-size:12px; color:#666; margin-bottom:6px;">堅軸TOP10・複勝率の推移(直近14日)</div>
+  <div style="display:flex; align-items:flex-end; height:110px; overflow-x:auto;">
+            <div style="display:flex; flex-direction:column; align-items:center; margin:0 2px;">
+              <div style="font-size:9px; color:#666;">70</div>
+              <div style="width:16px; height:56px; background:#ff6600; border-radius:2px 2px 0 0;"></div>
+              <div style="font-size:8px; color:#999; writing-mode:vertical-rl;">0801</div>
+            </div>
+            <div style="display:flex; flex-direction:column; align-items:center; margin:0 2px;">
+              <div style="font-size:9px; color:#666;">60</div>
+              <div style="width:16px; height:48px; background:#ff6600; border-radius:2px 2px 0 0;"></div>
+              <div style="font-size:8px; color:#999; writing-mode:vertical-rl;">0802</div>
+            </div>
+            <div style="display:flex; flex-direction:column; align-items:center; margin:0 2px;">
+              <div style="font-size:9px; color:#666;">100</div>
+              <div style="width:16px; height:80px; background:#ff6600; border-radius:2px 2px 0 0;"></div>
+              <div style="font-size:8px; color:#999; writing-mode:vertical-rl;">0808</div>
+            </div>
+            <div style="display:flex; flex-direction:column; align-items:center; margin:0 2px;">
+              <div style="font-size:9px; color:#666;">70</div>
+              <div style="width:16px; height:56px; background:#ff6600; border-radius:2px 2px 0 0;"></div>
+              <div style="font-size:8px; color:#999; writing-mode:vertical-rl;">0809</div>
+            </div>
+            <div style="display:flex; flex-direction:column; align-items:center; margin:0 2px;">
+              <div style="font-size:9px; color:#666;">80</div>
+              <div style="width:16px; height:64px; background:#ff6600; border-radius:2px 2px 0 0;"></div>
+              <div style="font-size:8px; color:#999; writing-mode:vertical-rl;">0815</div>
+            </div>
+            <div style="display:flex; flex-direction:column; align-items:center; margin:0 2px;">
+              <div style="font-size:9px; color:#666;">60</div>
+              <div style="width:16px; height:48px; background:#ff6600; border-radius:2px 2px 0 0;"></div>
+              <div style="font-size:8px; color:#999; writing-mode:vertical-rl;">0816</div>
+            </div></div>
+</div>
+<table>
+  <tr><th>日付</th><th style="text-align:right;">指数トップ</th><th style="text-align:right;">堅軸TOP10</th></tr>
+  
+        <tr>
+          <td style="padding:6px 8px; border-bottom:1px solid #eee;">20260816</td>
+          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right;">43.80%<br><span style="font-size:10px; color:#999;">(14/32)</span></td>
+          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#ff6600; font-weight:bold;">60.00%<br><span style="font-size:10px; color:#999;">(6/10)</span></td>
+        </tr>
+        <tr>
+          <td style="padding:6px 8px; border-bottom:1px solid #eee;">20260815</td>
+          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right;">56.20%<br><span style="font-size:10px; color:#999;">(18/32)</span></td>
+          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#ff6600; font-weight:bold;">80.00%<br><span style="font-size:10px; color:#999;">(8/10)</span></td>
+        </tr>
+        <tr>
+          <td style="padding:6px 8px; border-bottom:1px solid #eee;">20260809</td>
+          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right;">46.90%<br><span style="font-size:10px; color:#999;">(15/32)</span></td>
+          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#ff6600; font-weight:bold;">70.00%<br><span style="font-size:10px; color:#999;">(7/10)</span></td>
+        </tr>
+        <tr>
+          <td style="padding:6px 8px; border-bottom:1px solid #eee;">20260808</td>
+          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right;">59.40%<br><span style="font-size:10px; color:#999;">(19/32)</span></td>
+          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#ff6600; font-weight:bold;">100.00%<br><span style="font-size:10px; color:#999;">(10/10)</span></td>
+        </tr>
+        <tr>
+          <td style="padding:6px 8px; border-bottom:1px solid #eee;">20260802</td>
+          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right;">38.70%<br><span style="font-size:10px; color:#999;">(12/31)</span></td>
+          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#ff6600; font-weight:bold;">60.00%<br><span style="font-size:10px; color:#999;">(6/10)</span></td>
+        </tr>
+        <tr>
+          <td style="padding:6px 8px; border-bottom:1px solid #eee;">20260801</td>
+          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right;">50.00%<br><span style="font-size:10px; color:#999;">(16/32)</span></td>
+          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#ff6600; font-weight:bold;">70.00%<br><span style="font-size:10px; color:#999;">(7/10)</span></td>
+        </tr>
+</table>
+</body></html>
