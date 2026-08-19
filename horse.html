@@ -23,6 +23,7 @@
 <a href="ranking.html" style="color:#ddd; text-decoration:none; font-size:16px;" title="ランキング">🏆</a>
 <a href="calendar.html" style="color:#ddd; text-decoration:none; font-size:16px;" title="カレンダー">📅</a>
 <a href="horse.html" style="color:#ddd; text-decoration:none; font-size:16px;" title="馬名検索">🔍</a>
+<a href="review.html" style="color:#ddd; text-decoration:none; font-size:16px;" title="予想の振り返り">📊</a>
 </div>
 </div>
 <div style="height:14px;"></div>
@@ -177,7 +178,7 @@ function raceRowHtml(e, horseName) {
   let afDisplay = '';
   if (af !== null) {
     const cls = af < 0 ? 'af-good' : 'af-bad';
-    const pctStr = (afTopPct !== undefined && afTopPct !== null) ? '(上位' + afTopPct.toFixed(1) + '%)' : '';
+    const pctStr = (afTopPct !== undefined && afTopPct !== null) ? '(上位' + afTopPct.toFixed(2) + '%)' : '';
     const badgeStr = rankBadge ? ' <span style="background:#d4af37; color:#000; font-size:10px; padding:1px 5px; border-radius:8px; font-weight:bold;">' + rankBadge + '</span>' : '';
     const af3kStr = (af3katsu !== undefined && af3katsu !== null) ? ' <span class="af-badge ' + (af3katsu < 0 ? 'af-good' : 'af-bad') + '" style="font-size:10px;">3勝クラス基準AF ' + af3katsu.toFixed(2) + '%</span>' : '';
     afDisplay = '<span class="af-badge ' + cls + '">AF ' + af.toFixed(2) + '%' + pctStr + '</span>' + badgeStr + af3kStr;
@@ -207,7 +208,7 @@ function raceRowHtml(e, horseName) {
   const jockeyStr = jockey ? '騎手:' + jockey : '';
   // 2026/7/23確定(成果162、TAISUKE提案): 馬場指数(その日・その会場の基準タイムからの
   // 乖離率、AF計算の内部補正と同じ値)を、参考値として表示する
-  const babaStr = (babaIndex !== undefined && babaIndex !== null) ? '馬場指数' + (babaIndex >= 0 ? '+' : '') + babaIndex.toFixed(1) + '%' : '';
+  const babaStr = (babaIndex !== undefined && babaIndex !== null) ? '馬場指数' + (babaIndex >= 0 ? '+' : '') + babaIndex.toFixed(2) + '%' : '';
   const extraLine2 = (splitStr || jockeyStr || babaStr)
     ? '<div style="font-size:11px; color:#777; margin-top:2px;">' +
       [jockeyStr, babaStr, splitStr].filter(Boolean).join(' / ') +
