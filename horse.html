@@ -168,7 +168,7 @@ function raceRowHtml(e, horseName) {
   // 「馬名|日付|会場|レース番号」のキーで取得する
   const extraKey = horseName + '|' + date + '|' + venue + '|' + rNum;
   const extra = horseExtraStats && horseExtraStats[extraKey];
-  const [front3f, back3f, front4f, back4f, jockey, babaIndex] = extra || [null, null, null, null, null, null];
+  const [front3f, back3f, front4f, back4f, jockey, babaIndex, courseEvalScore] = extra || [null, null, null, null, null, null, null];
   let raceNameDisplay = raceName;
   if (archiveKey) {
     raceNameDisplay = '<a href="race.html?key=' + encodeURIComponent(archiveKey) + '">' + raceName + '</a>';
@@ -181,7 +181,12 @@ function raceRowHtml(e, horseName) {
     const pctStr = (afTopPct !== undefined && afTopPct !== null) ? '(上位' + afTopPct.toFixed(2) + '%)' : '';
     const badgeStr = rankBadge ? ' <span style="background:#d4af37; color:#000; font-size:10px; padding:1px 5px; border-radius:8px; font-weight:bold;">' + rankBadge + '</span>' : '';
     const af3kStr = (af3katsu !== undefined && af3katsu !== null) ? ' <span class="af-badge ' + (af3katsu < 0 ? 'af-good' : 'af-bad') + '" style="font-size:10px;">3勝クラス基準AF ' + af3katsu.toFixed(2) + '%</span>' : '';
-    afDisplay = '<span class="af-badge ' + cls + '">AF ' + af.toFixed(2) + '%' + pctStr + '</span>' + badgeStr + af3kStr;
+    // 2026/7/23確定(成果170、TAISUKE提案): コース内評点(パーセンタイル+突出度の
+    // 合成、0-100点)を、AF表示の隣にバッジとして追加する
+    const courseEvalStr = (courseEvalScore !== undefined && courseEvalScore !== null)
+      ? ' <span class="af-badge" style="font-size:10px; background:#6a4c93; color:#fff;" title="そのコース内での順位(パーセンタイル)と突出度(コース平均からの乖離度)を合成した評点">コース内評点 ' + courseEvalScore.toFixed(1) + '点</span>'
+      : '';
+    afDisplay = '<span class="af-badge ' + cls + '">AF ' + af.toFixed(2) + '%' + pctStr + '</span>' + badgeStr + af3kStr + courseEvalStr;
   }
   // 2026/7/23確定(成果130、TAISUKE提案): ペースの隣に、脚質・走破時計・上り3Fを追加。
   // 見やすさのため、これらは改行して2行目に表示する。
