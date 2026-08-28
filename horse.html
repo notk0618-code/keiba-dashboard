@@ -186,7 +186,9 @@ function raceRowHtml(e, horseName) {
     const courseEvalStr = (courseEvalScore !== undefined && courseEvalScore !== null)
       ? ' <span class="af-badge" style="font-size:10px; background:#6a4c93; color:#fff;" title="そのコース内での順位(パーセンタイル)と突出度(コース平均からの乖離度)を合成した評点">コース内評点 ' + courseEvalScore.toFixed(1) + '点</span>'
       : '';
-    afDisplay = '<span class="af-badge ' + cls + '">AF ' + af.toFixed(2) + '%' + pctStr + '</span>' + badgeStr + af3kStr + courseEvalStr;
+    // 2026/7/23確定(成果201、TAISUKE提案): 表示順を、コース内評点・AF・
+    // 3勝クラス基準AF・ランカーワッペン(あれば)の順に変更
+    afDisplay = courseEvalStr + '<span class="af-badge ' + cls + '">AF ' + af.toFixed(2) + '%' + pctStr + '</span>' + af3kStr + badgeStr;
   }
   // 2026/7/23確定(成果130、TAISUKE提案): ペースの隣に、脚質・走破時計・上り3Fを追加。
   // 見やすさのため、これらは改行して2行目に表示する。
@@ -228,7 +230,8 @@ function raceRowHtml(e, horseName) {
     ? '<span style="background:#ffd700; color:#333; font-weight:bold; padding:1px 6px; border-radius:4px;">' + finish + '</span>着'
     : finish + '着';
   return '<div class="race-row">' + date + ' ' + venue + distance + 'm(' + surface + ') ' +
-         raceNameDisplay + ' / ' + finishDisplay + ' / 馬場:' + (track || '-') + paceDisplay + afDisplay + extraLine + extraLine2 + '</div>';
+         raceNameDisplay + ' / ' + finishDisplay + ' / 馬場:' + (track || '-') + paceDisplay +
+         (afDisplay ? '<br>' + afDisplay : '') + extraLine + extraLine2 + '</div>';
 }
 
 function showHorseDetail(name) {
@@ -276,7 +279,9 @@ function showHorseDetail(name) {
       const styleLabel = mainStyle + (subStyle ? '(副:' + subStyle + ')' : '');
       styleStr = ' <span class="type-badge" style="font-size:12px; background:#6a4c93; color:#fff; padding:2px 8px; border-radius:10px;" title="直近10走の脚質から判定(捲り含む5分類)">🏇' + styleLabel + '</span>';
     }
-    const typeBadgeLine = '<div style="margin-bottom:2px;">' + surfaceTag + '<span class="type-badge" style="font-size:12px; background:#333; color:#fff; padding:2px 8px; border-radius:10px;" title="走破スタイル・レーダーチャートの最高軸(' + ratings[maxIdx] + '点)">' + typeAxisLabels[maxIdx] + '</span>' + corneringStr + styleStr + '</div>';
+    // 2026/7/23確定(成果201、TAISUKE提案): ワッペンの表示順を、
+    // タイプ・脚質・コーナリング加速力の順に変更
+    const typeBadgeLine = '<div style="margin-bottom:2px;">' + surfaceTag + '<span class="type-badge" style="font-size:12px; background:#333; color:#fff; padding:2px 8px; border-radius:10px;" title="走破スタイル・レーダーチャートの最高軸(' + ratings[maxIdx] + '点)">' + typeAxisLabels[maxIdx] + '</span>' + styleStr + corneringStr + '</div>';
     let bucketRankStr = '';
     if (ratingsEntry.bucketRank && ratingsEntry.bucketN) {
       const rangeMatch = ratingsEntry.bestBucket.match(/\(([^)]+)\)/);
