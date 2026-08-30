@@ -168,32 +168,39 @@ function raceRowHtml(e, horseName) {
   // 「馬名|日付|会場|レース番号」のキーで取得する
   const extraKey = horseName + '|' + date + '|' + venue + '|' + rNum;
   const extra = horseExtraStats && horseExtraStats[extraKey];
-  const [front3f, back3f, front4f, back4f, jockey, babaIndex, courseEvalScore] = extra || [null, null, null, null, null, null, null];
+  // 2026/7/23確定(成果211、TAISUKE提案): レースラップを追加
+  const [front3f, back3f, front4f, back4f, jockey, babaIndex, courseEvalScore, raceLap] = extra || [null, null, null, null, null, null, null, null];
+  // 2026/7/23確定(成果212、TAISUKE提案): 個別ラップは、horse_extra_stats.jsonの
+  // サイズ超過を避けるため、保存せず、レースラップ・走破タイム・上り3Fタイムから、
+  // このJavaScript関数内で、その場で算出する(Pythonのestimate_individual_lapsと、
+  // 同じロジック)
+  function estimateIndividualLapsJs(finishT, last3fT, lapPattern, dist) {
+    const nFurlongs = Math.ceil(dist / 200);
+    const pattern = lapPattern.slice(0, nFurlongs);
+    if (pattern.length < 3) return null;
+    const last3Pattern = pattern.slice(-3);
+    const last3Sum = last3Pattern.reduce((a, b) => a + b, 0);
+    const last3Est = last3Sum > 0 ? last3Pattern.map(p => last3fT * p / last3Sum) : [last3fT / 3, last3fT / 3, last3fT / 3];
+    const earlyPattern = pattern.slice(0, -3);
+    const remainingTime = finishT - last3fT;
+    const earlySum = earlyPattern.reduce((a, b) => a + b, 0);
+    const earlyEst = (earlyPattern.length > 0 && earlySum > 0) ? earlyPattern.map(p => remainingTime * p / earlySum) : [];
+    return earlyEst.concat(last3Est);
+  }
+  let individualLap = null;
+  if (raceLap && finishTime !== null && finishTime !== undefined && agari3f !== null && agari3f !== undefined) {
+    const lapPattern = raceLap.split('-').map(Number);
+    const estLaps = estimateIndividualLapsJs(finishTime, agari3f, lapPattern, distance);
+    if (estLaps) {
+      individualLap = estLaps.map(v => v.toFixed(1)).join('-');
+    }
+  }
   let raceNameDisplay = raceName;
   if (archiveKey) {
     raceNameDisplay = '<a href="race.html?key=' + encodeURIComponent(archiveKey) + '">' + raceName + '</a>';
   } else if (dashDate) {
     raceNameDisplay = '<a href="dashboard_' + dashDate + '.html#' + venue + '_' + rNum + '">' + raceName + '</a>';
   }
-  let afDisplay = '';
-  if (af !== null) {
-    const cls = af < 0 ? 'af-good' : 'af-bad';
-    const pctStr = (afTopPct !== undefined && afTopPct !== null) ? '(上位' + afTopPct.toFixed(2) + '%)' : '';
-    const badgeStr = rankBadge ? ' <span style="background:#d4af37; color:#000; font-size:10px; padding:1px 5px; border-radius:8px; font-weight:bold;">' + rankBadge + '</span>' : '';
-    const af3kStr = (af3katsu !== undefined && af3katsu !== null) ? ' <span class="af-badge ' + (af3katsu < 0 ? 'af-good' : 'af-bad') + '" style="font-size:10px;">3勝クラス基準AF ' + af3katsu.toFixed(2) + '%</span>' : '';
-    // 2026/7/23確定(成果170、TAISUKE提案): コース内評点(パーセンタイル+突出度の
-    // 合成、0-100点)を、AF表示の隣にバッジとして追加する
-    const courseEvalStr = (courseEvalScore !== undefined && courseEvalScore !== null)
-      ? ' <span class="af-badge" style="font-size:10px; background:#6a4c93; color:#fff;" title="そのコース内での順位(パーセンタイル)と突出度(コース平均からの乖離度)を合成した評点">コース内評点 ' + courseEvalScore.toFixed(1) + '点</span>'
-      : '';
-    // 2026/7/23確定(成果201、TAISUKE提案): 表示順を、コース内評点・AF・
-    // 3勝クラス基準AF・ランカーワッペン(あれば)の順に変更
-    afDisplay = courseEvalStr + '<span class="af-badge ' + cls + '">AF ' + af.toFixed(2) + '%' + pctStr + '</span>' + af3kStr + badgeStr;
-  }
-  // 2026/7/23確定(成果130、TAISUKE提案): ペースの隣に、脚質・走破時計・上り3Fを追加。
-  // 見やすさのため、これらは改行して2行目に表示する。
-  // 2026/7/23追加(成果155、TAISUKE提案): 騎手・前後半3F/4F(ラップ補正後)を、
-  // 3行目に追加表示する
   function formatFinishTime(sec) {
     if (sec === null || sec === undefined) return null;
     const m = Math.floor(sec / 60);
@@ -203,35 +210,42 @@ function raceRowHtml(e, horseName) {
   const styleLabelMap = {'逃':'逃げ', '先':'先行', '差':'差し', '追':'追込'};
   const styleStr = raceStyle ? (styleLabelMap[raceStyle] || raceStyle) : '';
   const timeStr = formatFinishTime(finishTime);
-  const agariStr = (agari3f !== null && agari3f !== undefined) ? agari3f.toFixed(1) : '';
-  let paceDisplay = pace ? ' / ' + pace : '';
-  const extraLine = (styleStr || timeStr || agariStr)
-    ? '<div style="font-size:11px; color:#777; margin-top:2px;">' +
-      [styleStr, timeStr ? '走破' + timeStr : '', agariStr ? '上り3F ' + agariStr : ''].filter(Boolean).join(' / ') +
-      '</div>'
-    : '';
+  const jockeyStr = jockey ? '騎手:' + jockey : '';
+  const babaStr = (babaIndex !== undefined && babaIndex !== null) ? '馬場指数' + (babaIndex >= 0 ? '+' : '') + babaIndex.toFixed(2) + '%' : '';
   const splitStr = (front3f !== undefined && front3f !== null && back3f !== undefined && back3f !== null)
     ? '前3F ' + front3f.toFixed(1) + '/後3F ' + back3f.toFixed(1) + '/前4F ' + front4f.toFixed(1) + '/後4F ' + back4f.toFixed(1) : '';
-  const jockeyStr = jockey ? '騎手:' + jockey : '';
-  // 2026/7/23確定(成果162、TAISUKE提案): 馬場指数(その日・その会場の基準タイムからの
-  // 乖離率、AF計算の内部補正と同じ値)を、参考値として表示する
-  const babaStr = (babaIndex !== undefined && babaIndex !== null) ? '馬場指数' + (babaIndex >= 0 ? '+' : '') + babaIndex.toFixed(2) + '%' : '';
-  const extraLine2 = (splitStr || jockeyStr || babaStr)
-    ? '<div style="font-size:11px; color:#777; margin-top:2px;">' +
-      [jockeyStr, babaStr, splitStr].filter(Boolean).join(' / ') +
-      '</div>'
-    : '';
   // 2026/7/23確定(成果167、TAISUKE提案): 1着の場合、黄色いボックスで
   // 数字を強調表示し、過去の勝ち鞍を一目でわかりやすくする
-  // 2026/7/23確定(成果167バグ修正、TAISUKE提案): 着順が「1.0」のような
-  // 小数形式で保存されているケースがあり、文字列「1」との厳密一致では
-  // 検出できていなかった。数値変換して比較するよう修正
   const finishDisplay = (parseFloat(finish) === 1)
     ? '<span style="background:#ffd700; color:#333; font-weight:bold; padding:1px 6px; border-radius:4px;">' + finish + '</span>着'
     : finish + '着';
-  return '<div class="race-row">' + date + ' ' + venue + distance + 'm(' + surface + ') ' +
-         raceNameDisplay + ' / ' + finishDisplay + ' / 馬場:' + (track || '-') + paceDisplay +
-         (afDisplay ? '<br>' + afDisplay : '') + extraLine + extraLine2 + '</div>';
+  // 2026/7/23確定(成果211、TAISUKE提案): レースカードの5走サマリー(成果211)と、
+  // 同じ表記構成に統一する。①日付・会場・距離、②レース名/着順/コース内評点+
+  // ランクバッジ、③全体基準AF/3勝クラス基準AF、④馬場・ペース・脚質、
+  // ⑤走破・騎手・馬場指数、⑥前後半3F/4F、⑦レースラップ、⑧個別ラップ
+  const courseEvalSuffix = (courseEvalScore !== undefined && courseEvalScore !== null)
+    ? ' ／ コース内評点' + courseEvalScore.toFixed(1) + '点' : '';
+  const rankBadgeStr = rankBadge ? ' <span style="background:#d4af37; color:#000; font-size:10px; padding:1px 5px; border-radius:8px; font-weight:bold;">' + rankBadge + '</span>' : '';
+  let afLine = '';
+  if (af !== null) {
+    const cls = af < 0 ? 'af-good' : 'af-bad';
+    const pctStr = (afTopPct !== undefined && afTopPct !== null) ? '(上位' + afTopPct.toFixed(2) + '%)' : '';
+    const af3kStr = (af3katsu !== undefined && af3katsu !== null) ? ' ／ 3勝クラス基準' + af3katsu.toFixed(2) + '%' : '';
+    afLine = '<div style="font-size:12px; color:#0645AD;">全体基準' + af.toFixed(2) + '%' + pctStr + af3kStr + '</div>';
+  }
+  const pt = track || '-';
+  const paceTrackLine = (pt !== '-' || pace || styleStr)
+    ? '<div style="font-size:11px; color:#888;">' + [pt + '馬場', pace ? pace + 'ペース' : '', styleStr].filter(Boolean).join('・') + '</div>' : '';
+  const extraLine1 = (timeStr || jockeyStr || babaStr)
+    ? '<div style="font-size:11px; color:#777;">' + [timeStr ? '走破' + timeStr : '', jockeyStr, babaStr].filter(Boolean).join(' ／ ') + '</div>' : '';
+  const extraLine2 = splitStr ? '<div style="font-size:11px; color:#777;">' + splitStr + '</div>' : '';
+  const extraLine3 = raceLap ? '<div style="font-size:10px; color:#999;">レースラップ: ' + raceLap + '</div>' : '';
+  const extraLine4 = raceLap ? '<div style="font-size:10px; color:#999;">個別ラップ: ' + (individualLap || '') + '</div>' : '';
+  return '<div class="race-row">' +
+    '<div style="font-size:13px; font-weight:bold;">' + date.replace(/-/g, '/') + ' ' + venue + distance + 'm</div>' +
+    '<div style="font-size:12px; color:#555;">' + raceNameDisplay + ' ／ ' + finishDisplay + courseEvalSuffix + rankBadgeStr + '</div>' +
+    afLine + paceTrackLine + extraLine1 + extraLine2 + extraLine3 + extraLine4 +
+    '</div>';
 }
 
 function showHorseDetail(name) {
