@@ -169,7 +169,7 @@ function raceRowHtml(e, horseName) {
   const extraKey = horseName + '|' + date + '|' + venue + '|' + rNum;
   const extra = horseExtraStats && horseExtraStats[extraKey];
   // 2026/7/23確定(成果211、TAISUKE提案): レースラップを追加
-  const [front3f, back3f, front4f, back4f, jockey, babaIndex, courseEvalScore, raceLap] = extra || [null, null, null, null, null, null, null, null];
+  const [front3f, back3f, front4f, back4f, jockey, babaIndex, courseEvalScore, raceLap, margin] = extra || [null, null, null, null, null, null, null, null, null];
   // 2026/7/23確定(成果212、TAISUKE提案): 個別ラップは、horse_extra_stats.jsonの
   // サイズ超過を避けるため、保存せず、レースラップ・走破タイム・上り3Fタイムから、
   // このJavaScript関数内で、その場で算出する(Pythonのestimate_individual_lapsと、
@@ -219,6 +219,8 @@ function raceRowHtml(e, horseName) {
   const finishDisplay = (parseFloat(finish) === 1)
     ? '<span style="background:#ffd700; color:#333; font-weight:bold; padding:1px 6px; border-radius:4px;">' + finish + '</span>着'
     : finish + '着';
+  // 2026/9/1確定(成果239、TAISUKE提案): 過去実績に、1着との着差を反映する
+  const marginDisplay = (parseFloat(finish) === 1 || margin === undefined || margin === null) ? '' : '(-' + margin.toFixed(1) + '秒)';
   // 2026/7/23確定(成果211、TAISUKE提案): レースカードの5走サマリー(成果211)と、
   // 同じ表記構成に統一する。①日付・会場・距離、②レース名/着順/コース内評点+
   // ランクバッジ、③全体基準AF/3勝クラス基準AF、④馬場・ペース・脚質、
@@ -247,7 +249,7 @@ function raceRowHtml(e, horseName) {
     ? '<div style="font-size:12px; color:#555;">ベース値' + courseEvalScore.toFixed(1) + '点' + rankBadgeStr + '</div>' : '';
   return '<div class="race-row">' +
     '<div style="font-size:13px; font-weight:bold;">' + date.replace(/-/g, '/') + ' ' + venue + surface + distance + 'm</div>' +
-    '<div style="font-size:12px; color:#555;">' + raceNameDisplay + ' ／ ' + finishDisplay + '</div>' +
+    '<div style="font-size:12px; color:#555;">' + raceNameDisplay + ' ／ ' + finishDisplay + marginDisplay + '</div>' +
     paceTrackLine + extraLine1 + extraLine2 + extraLine3 + extraLine4 + courseEvalLine + afLine +
     '</div>';
 }
@@ -309,8 +311,50 @@ function showHorseDetail(name) {
     const totalLine = '<div style="font-size:13px; margin-bottom:2px;">総合力 ' + ratingsEntry.total + '点　全体 ' + ratingsEntry.totalRank + '／' + ratingsEntry.totalN + '位' + bucketRankStr + '</div>';
     let block = typeBadgeLine + totalLine;
     block += '<div style="background:#fafafa; border:1px solid #eee; border-radius:8px; padding:10px; margin-bottom:12px;">' +
-             buildParameterBars(ratings) + '</div>';
+             buildParameterBars(ratings) + buildCourseEvalTrendChart() + '</div>';
     return block;
+  }
+
+  // 2026/9/1確定(成果239、TAISUKE提案): 各馬のAF(CP、旧コース内評点)の、
+  // 出走ごとの、"それまでの実績の中央値"の推移を、折れ線グラフで可視化する。
+  // 例: 50・60・70なら60、次走80なら65、という、実績の"積み上げ中央値"の
+  // 推移を示す。値が右肩上がりなら成長曲線、途中から横ばい・下降なら
+  // ピークアウトを示唆する
+  function buildCourseEvalTrendChart() {
+    if (!races || races.length < 2) return '';
+    const chronological = races.slice().reverse();
+    const points = [];
+    const seen = [];
+    for (const e of chronological) {
+      const eDate = e[0], eVenue = e[1], eRNum = e[11];
+      const extraKey2 = name + '|' + eDate + '|' + eVenue + '|' + eRNum;
+      const extra2 = horseExtraStats && horseExtraStats[extraKey2];
+      const courseEval2 = extra2 ? extra2[6] : null;
+      if (courseEval2 === null || courseEval2 === undefined) continue;
+      seen.push(courseEval2);
+      const sorted = seen.slice().sort((a, b) => a - b);
+      const mid = Math.floor(sorted.length / 2);
+      const median = sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+      points.push(median);
+    }
+    if (points.length < 2) return '';
+    const w = 300, h = 60, pad = 4;
+    const minV = Math.min(...points), maxV = Math.max(...points);
+    const range = (maxV - minV) || 1;
+    const stepX = (w - pad * 2) / (points.length - 1);
+    const coords = points.map((v, i) => {
+      const x = pad + i * stepX;
+      const y = pad + (h - pad * 2) * (1 - (v - minV) / range);
+      return x.toFixed(1) + ',' + y.toFixed(1);
+    });
+    const polyline = coords.join(' ');
+    return '<div style="margin-top:8px; padding-top:8px; border-top:1px solid #eee;">' +
+      '<div style="font-size:11px; color:#888; margin-bottom:2px;">Mid AF(CP)推移(積み上げ中央値、成長曲線・ピークアウトの参考)</div>' +
+      '<svg viewBox="0 0 ' + w + ' ' + h + '" style="width:100%; height:' + h + 'px;">' +
+      '<polyline points="' + polyline + '" fill="none" stroke="#0a7d3c" stroke-width="2"/>' +
+      '</svg>' +
+      '<div style="font-size:10px; color:#aaa;">直近値: ' + points[points.length - 1].toFixed(1) + '点(全' + points.length + '走)</div>' +
+      '</div>';
   }
 
   // 2026/7/23確定(成果146・147、TAISUKE提案): 馬名の隣に性別・年齢を表示する。
