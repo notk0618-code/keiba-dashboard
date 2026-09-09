@@ -325,6 +325,7 @@ function showHorseDetail(name) {
     if (!races || races.length < 2) return '';
     const chronological = races.slice().reverse();
     const points = [];
+    const rawPoints = [];
     const dates = [];
     const seen = [];
     for (const e of chronological) {
@@ -334,10 +335,11 @@ function showHorseDetail(name) {
       const courseEval2 = extra2 ? extra2[6] : null;
       if (courseEval2 === null || courseEval2 === undefined) continue;
       seen.push(courseEval2);
-      const sorted = seen.slice().sort((a, b) => a - b);
-      const mid = Math.floor(sorted.length / 2);
-      const median = sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
-      points.push(median);
+      // 2026/9/1確定(TAISUKE追加提案): 積み上げ統計量を、中央値から、
+      // 平均値に変更した
+      const mean = seen.reduce((a, b) => a + b, 0) / seen.length;
+      points.push(mean);
+      rawPoints.push(courseEval2);
       dates.push(new Date(eDate));
     }
     if (points.length < 2) return '';
@@ -378,12 +380,21 @@ function showHorseDetail(name) {
 
     const coords = points.map((v, i) => xOf(dates[i]).toFixed(1) + ',' + yOf(v).toFixed(1));
     const polyline = coords.join(' ');
+    // 2026/9/1確定(TAISUKE追加提案): レースごとのAF実績(生の値)も、
+    // 別の色の折れ線として、追加した
+    const rawCoords = rawPoints.map((v, i) => xOf(dates[i]).toFixed(1) + ',' + yOf(v).toFixed(1));
+    const rawPolyline = rawCoords.join(' ');
     return '<div style="margin-top:8px; padding-top:8px; border-top:1px solid #eee;">' +
       '<div style="font-size:11px; color:#888; margin-bottom:2px;">成長曲線・ピークアウト分析</div>' +
       '<svg viewBox="0 0 ' + w + ' ' + h + '" style="width:100%; height:' + h + 'px;">' +
       axisSvg +
+      '<polyline points="' + rawPolyline + '" fill="none" stroke="#ff9800" stroke-width="1.5" opacity="0.7"/>' +
       '<polyline points="' + polyline + '" fill="none" stroke="#0a7d3c" stroke-width="2"/>' +
       '</svg>' +
+      '<div style="font-size:9px; color:#999;">' +
+      '<span style="color:#0a7d3c;">■</span>平均AF推移　' +
+      '<span style="color:#ff9800;">■</span>AF実績' +
+      '</div>' +
       '<div style="font-size:10px; color:#aaa;">直近値: ' + points[points.length - 1].toFixed(1) + '点(全' + points.length + '走)</div>' +
       '</div>';
   }
