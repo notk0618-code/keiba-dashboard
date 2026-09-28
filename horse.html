@@ -162,7 +162,7 @@ function buildParameterBars(ratings, customLabels) {
 }
 
 function raceRowHtml(e, horseName) {
-  const [date, venue, distance, raceName, finish, weight, track, surface, af, pace, dashDate, rNum, archiveKey, horseType, afTopPct, rankBadge, af3katsu, raceStyle, finishTime, agari3f] = e;
+  const [date, venue, distance, raceName, finish, weight, track, surface, af, pace, dashDate, rNum, archiveKey, horseType, afTopPct, rankBadge, af3katsu, raceStyle, finishTime, agari3f, passageOrder] = e;
   // 2026/7/23確定(成果161、TAISUKE提案): 前後半3F/4F・騎手は、サイズ超過を
   // 避けるため、entry配列ではなく、別ファイル(horseExtraStats)から
   // 「馬名|日付|会場|レース番号」のキーで取得する
@@ -208,7 +208,9 @@ function raceRowHtml(e, horseName) {
     return m + ':' + (s < 10 ? '0' : '') + s;
   }
   const styleLabelMap = {'逃':'逃げ', '先':'先行', '差':'差し', '追':'追込'};
-  const styleStr = raceStyle ? (styleLabelMap[raceStyle] || raceStyle) : '';
+  // 2026/9/26確定(TAISUKE提案・恒久対応): 脚質実績の隣に、通過順位
+  // (例:「4-4」)を括弧書きで併記する
+  const styleStr = raceStyle ? ((styleLabelMap[raceStyle] || raceStyle) + (passageOrder ? '(' + passageOrder + ')' : '')) : '';
   const timeStr = formatFinishTime(finishTime);
   const jockeyStr = jockey ? '騎手:' + jockey : '';
   const babaStr = (babaIndex !== undefined && babaIndex !== null) ? '馬場指数' + (babaIndex >= 0 ? '+' : '') + babaIndex.toFixed(2) + '%' : '';
