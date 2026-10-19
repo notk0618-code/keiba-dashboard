@@ -22,7 +22,7 @@
 <a id="confidence-link-icon" href="index.html#confidence-ranking" style="color:#ff6600; text-decoration:none; font-size:16px;" title="堅軸TOP10">🔥</a>
 <a href="ranking.html" style="color:#ddd; text-decoration:none; font-size:16px;" title="ランキング">🏆</a>
 <a href="calendar.html" style="color:#ddd; text-decoration:none; font-size:16px;" title="カレンダー">📅</a>
-<a href="horse.html" style="color:#ddd; text-decoration:none; font-size:16px;" title="馬名検索">🔍</a>
+<a href="horse.html" style="color:#ddd; text-decoration:none; font-size:16px;" title="馬名・レース検索">🔍</a>
 <a href="review.html" style="color:#ddd; text-decoration:none; font-size:16px;" title="予想の振り返り">📊</a>
 </div>
 </div>
@@ -44,7 +44,11 @@
   }).catch(() => {});
 })();
 </script>
-<h2>🔍 馬名検索</h2>
+<h2>🔍 馬名・レース検索</h2>
+<div style="display:flex; gap:6px; margin-bottom:8px;">
+<button id="modeHorse" onclick="setMode('horse')" style="flex:1; padding:8px; border:1px solid #111; border-radius:8px; font-size:14px; background:#111; color:#fff;">🐴 馬名</button>
+<button id="modeRace" onclick="setMode('race')" style="flex:1; padding:8px; border:1px solid #111; border-radius:8px; font-size:14px; background:#fff; color:#111;">🏆 レース</button>
+</div>
 <input type="text" id="searchBox" placeholder="馬名を入力(部分一致)" autocomplete="off">
 <div id="resultsArea"></div>
 
@@ -169,7 +173,7 @@ function raceRowHtml(e, horseName) {
   const extraKey = horseName + '|' + date + '|' + venue + '|' + rNum;
   const extra = horseExtraStats && horseExtraStats[extraKey];
   // 2026/7/23確定(成果211、TAISUKE提案): レースラップを追加
-  const [front3f, back3f, front4f, back4f, jockey, babaIndex, courseEvalScore, raceLap, margin] = extra || [null, null, null, null, null, null, null, null, null];
+  const [front3f, back3f, front4f, back4f, jockey, babaIndex, courseEvalScore, raceLap, margin, bodyWeight, bwDiff] = extra || [null, null, null, null, null, null, null, null, null, null, null];
   // 2026/7/23確定(成果212、TAISUKE提案): 個別ラップは、horse_extra_stats.jsonの
   // サイズ超過を避けるため、保存せず、レースラップ・走破タイム・上り3Fタイムから、
   // このJavaScript関数内で、その場で算出する(Pythonのestimate_individual_lapsと、
@@ -238,8 +242,13 @@ function raceRowHtml(e, horseName) {
   const pt = track || '-';
   const paceTrackLine = (pt !== '-' || pace || styleStr)
     ? '<div style="font-size:11px; color:#888;">' + [pt + '馬場', pace ? pace + 'ペース' : '', styleStr].filter(Boolean).join('・') + '</div>' : '';
-  const extraLine1 = (timeStr || jockeyStr || babaStr)
-    ? '<div style="font-size:11px; color:#777;">' + [timeStr ? '走破' + timeStr : '', jockeyStr, babaStr].filter(Boolean).join(' ／ ') + '</div>' : '';
+  // 2026/10/15確定(TAISUKE提案): 馬体重と前走からの増減(例: 480kg(+2))
+  const bwStr = (bodyWeight !== undefined && bodyWeight !== null)
+    ? '馬体重:' + bodyWeight + 'kg' + ((bwDiff !== undefined && bwDiff !== null) ? '(' + (bwDiff === 0 ? '±0' : (bwDiff > 0 ? '+' : '') + bwDiff) + ')' : '') : '';
+  // 2026/10/19確定(TAISUKE提案): 出走時の斤量(entry配列の6番目の値。既存データのため追加サイズなし)
+  const kinStr = (weight !== undefined && weight !== null && !isNaN(weight)) ? '斤量:' + parseFloat(weight) + 'kg' : '';
+  const extraLine1 = (timeStr || jockeyStr || babaStr || bwStr || kinStr)
+    ? '<div style="font-size:11px; color:#777;">' + [timeStr ? '走破' + timeStr : '', jockeyStr, babaStr, bwStr, kinStr].filter(Boolean).join(' ／ ') + '</div>' : '';
   const extraLine2 = splitStr ? '<div style="font-size:11px; color:#777;">' + splitStr + '</div>' : '';
   const extraLine3 = raceLap ? '<div style="font-size:10px; color:#999;">レースラップ: ' + raceLap + '</div>' : '';
   const extraLine4 = raceLap ? '<div style="font-size:10px; color:#999;">個別ラップ: ' + (individualLap || '') + '</div>' : '';
@@ -443,14 +452,70 @@ function getParam(name) {
   return params.get(name);
 }
 
-document.getElementById('searchBox').addEventListener('input', function(e) {
-  const query = e.target.value;
+let searchMode = 'horse';
+let gradedIdx = null;
+let raceArchive = null;
+function setMode(m) {
+  searchMode = m;
+  document.getElementById('modeHorse').style.cssText += (m === 'horse') ? ';background:#111;color:#fff' : ';background:#fff;color:#111';
+  document.getElementById('modeRace').style.cssText += (m === 'race') ? ';background:#111;color:#fff' : ';background:#fff;color:#111';
+  document.getElementById('searchBox').placeholder = (m === 'horse') ? '馬名を入力(部分一致)' : 'レース名を入力(例: 秋華賞 / 有馬 / G1)';
+  runSearch(document.getElementById('searchBox').value);
+}
+function esc(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+async function loadRaceData() {
+  if (!gradedIdx) {
+    try { gradedIdx = await (await fetch('graded_index.json?v=' + Date.now())).json(); } catch (e) { gradedIdx = {}; }
+  }
+  if (!raceArchive) {
+    try { raceArchive = await (await fetch('race_archive.json')).json(); } catch (e) { raceArchive = {}; }
+  }
+}
+function normQ(t) { return String(t || '').normalize('NFKC').toLowerCase(); }
+async function renderRaceResults(query) {
+  const area = document.getElementById('resultsArea');
+  if (!query) { area.innerHTML = ''; return; }
+  area.innerHTML = '<div class="loading">読み込み中...</div>';
+  await loadRaceData();
+  if (normQ(document.getElementById('searchBox').value) !== normQ(query)) return;
+  const q = normQ(query);
+  let html = '';
+  const gl = Object.values(gradedIdx).filter(v => normQ(v.name + ' ' + (v.grade || '') + ' ' + v.surface + v.distance + ' ' + (v.venues || []).join(' ')).includes(q));
+  const order = {G1: 0, G2: 1, G3: 2};
+  gl.sort((a, b) => (order[a.grade] ?? 3) - (order[b.grade] ?? 3));
+  if (gl.length) {
+    html += '<div style="font-weight:bold; margin:8px 0 4px;">📚 重賞の過去結果サマリー</div>';
+    gl.slice(0, 30).forEach(v => {
+      html += '<a class="result-item" style="display:block; text-decoration:none; color:inherit;" href="' + esc(v.file) + '">🏆 ' + esc(v.name) + ' ' + esc(v.grade || '') + '(' + esc(v.surface) + v.distance + 'm・' + esc((v.venues || []).join('/')) + ') 過去' + v.n_editions + '回</a>';
+    });
+  }
+  const rl = Object.entries(raceArchive).filter(([k, v]) => v && v.race_name && normQ(v.race_name).includes(q))
+    .sort((a, b) => String(b[1].date).localeCompare(String(a[1].date))).slice(0, 40);
+  if (rl.length) {
+    html += '<div style="font-weight:bold; margin:12px 0 4px;">📅 個別レース(新しい順)</div>';
+    rl.forEach(([k, v]) => {
+      html += '<a class="result-item" style="display:block; text-decoration:none; color:inherit;" href="race.html?key=' + encodeURIComponent(k) + '">' + esc(v.date) + ' ' + esc(v.venue) + esc(v.r) + 'R ' + esc(v.race_name) + '(' + esc(v.surface || '') + esc(v.distance || '') + 'm)</a>';
+    });
+  }
+  area.innerHTML = html || '<div class="loading">該当するレースが見つかりません</div>';
+}
+function runSearch(query) {
+  if (searchMode === 'race') { renderRaceResults(query); return; }
   if (!horseData) {
     loadData().then(() => renderSearchResults(query));
   } else {
     renderSearchResults(query);
   }
+}
+document.getElementById('searchBox').addEventListener('input', function(e) {
+  runSearch(e.target.value);
 });
+
+const initialQ = getParam('q');
+if (initialQ && getParam('mode') === 'race') {
+  document.getElementById('searchBox').value = initialQ;
+  setMode('race');
+}
 
 const initialName = getParam('name');
 if (initialName) {
