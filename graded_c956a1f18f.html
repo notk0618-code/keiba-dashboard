@@ -1,0 +1,42 @@
+<html><head><meta charset='utf-8'><meta name='robots' content='noindex, nofollow'><meta name='viewport' content='width=device-width, initial-scale=1'><link rel='icon' type='image/png' sizes='32x32' href='favicon-32.png'><title>ファンタ 過去の結果 | AF Keiba DATA</title><style>
+  body { font-family: sans-serif; background:#f5f5f5; margin:0; padding:12px; max-width:780px; margin-left:auto; margin-right:auto; box-sizing:border-box; color:#222; }
+  h1 { font-size:18px; margin:14px 0 4px; } h2 { font-size:16px; margin:22px 0 8px; border-left:4px solid #ff6600; padding-left:8px; }
+  h3 { font-size:14px; margin:14px 0 4px; }
+  .sub { font-size:12px; color:#666; } .note { font-size:11px; color:#888; margin:4px 0 8px; line-height:1.5; }
+  .scroll { overflow-x:auto; background:#fff; border:1px solid #ddd; border-radius:6px; }
+  table { border-collapse:collapse; width:100%; font-size:12px; white-space:nowrap; }
+  th { background:#111; color:#fff; padding:5px 7px; text-align:left; font-weight:bold; }
+  td { padding:5px 7px; border-bottom:1px solid #eee; }
+  tr.small td { color:#999; } .warn { font-size:10px; color:#c07000; }
+  details { background:#fff; border:1px solid #ddd; border-radius:6px; margin-bottom:8px; padding:6px 10px; }
+  summary { cursor:pointer; font-size:13px; } .facts { background:#fff8e1; border:1px solid #e0c060; border-radius:6px; padding:8px 12px; font-size:13px; line-height:1.7; }
+  .win { background:#ffd700; padding:0 5px; border-radius:3px; font-weight:bold; } a { color:#0645AD; }
+</style></head><body><div id="top" style="background:#000; margin:-12px -12px 0 -12px; padding:14px 16px; border-bottom:3px solid #ff6600; display:flex; justify-content:space-between; align-items:center; font-family:sans-serif;">
+<a href="index.html" style="color:#fff; font-weight:bold; font-size:17px; letter-spacing:0.5px; text-decoration:none;">AF<span style="color:#ff6600;">Keiba</span>DATA</a>
+<div style="display:flex; gap:14px; align-items:center;">
+<a id="value-link-icon" href="index.html#value-ranking" style="color:#ff6600; text-decoration:none; font-size:16px;" title="本日の狙い目">🎯</a>
+<a id="confidence-link-icon" href="index.html#confidence-ranking" style="color:#ff6600; text-decoration:none; font-size:16px;" title="堅軸TOP10">🔥</a>
+<a href="ranking.html" style="color:#ddd; text-decoration:none; font-size:16px;" title="ランキング">🏆</a>
+<a href="calendar.html" style="color:#ddd; text-decoration:none; font-size:16px;" title="カレンダー">📅</a>
+<a href="horse.html" style="color:#ddd; text-decoration:none; font-size:16px;" title="馬名・レース検索">🔍</a>
+<a href="review.html" style="color:#ddd; text-decoration:none; font-size:16px;" title="予想の振り返り">📊</a>
+</div>
+</div>
+<div style="height:14px;"></div>
+<script>
+(function() {
+  const d = new Date();
+  const yy = String(d.getFullYear()).slice(2);
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  const todayFile = 'dashboard_' + yy + mm + dd + '.html';
+  fetch(todayFile, { method: 'HEAD' }).then(res => {
+    if (res.ok) {
+      const vLink = document.getElementById('value-link-icon');
+      const cLink = document.getElementById('confidence-link-icon');
+      if (vLink) vLink.href = todayFile + '#value-ranking';
+      if (cLink) cLink.href = todayFile + '#confidence-ranking';
+    }
+  }).catch(() => {});
+})();
+</script><h1>🏆 ファンタ(芝1400m) 過去の結果サマリー</h1><p>過去の開催データがありません(データなし)。</p></body></html>
