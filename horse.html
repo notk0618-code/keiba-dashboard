@@ -481,10 +481,10 @@ async function renderRaceResults(query) {
   const q = normQ(query);
   let html = '';
   const gl = Object.values(gradedIdx).filter(v => normQ(v.name + ' ' + (v.grade || '') + ' ' + v.surface + v.distance + ' ' + (v.venues || []).join(' ')).includes(q));
-  const order = {G1: 0, G2: 1, G3: 2};
-  gl.sort((a, b) => (order[a.grade] ?? 3) - (order[b.grade] ?? 3));
+  const order = {G1: 0, G2: 1, G3: 2, L: 3, OP: 4};
+  gl.sort((a, b) => (order[a.grade] ?? 5) - (order[b.grade] ?? 5));
   if (gl.length) {
-    html += '<div style="font-weight:bold; margin:8px 0 4px;">📚 重賞の過去結果サマリー</div>';
+    html += '<div style="font-weight:bold; margin:8px 0 4px;">📚 重賞・オープンの過去結果サマリー</div>';
     gl.slice(0, 30).forEach(v => {
       html += '<a class="result-item" style="display:block; text-decoration:none; color:inherit;" href="' + esc(v.file) + '">🏆 ' + esc(v.name) + ' ' + esc(v.grade || '') + '(' + esc(v.surface) + v.distance + 'm・' + esc((v.venues || []).join('/')) + ') 過去' + v.n_editions + '回</a>';
     });
