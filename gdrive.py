@@ -3,11 +3,22 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
 FOLDER = "1Pbfmhfp5onM9XF0dmZBXMeK6w-xfzbDz"
+SCOPES = ["https://www.googleapis.com/auth/drive"]
+def _env_json(name):
+    v = os.environ.get(name, "").strip()
+    if not v: return None
+    try: return json.loads(v)
+    except Exception: return json.loads(base64.b64decode(v))
+def can_create():
+    """Only the owner's OAuth token can create files: a service account has no Drive storage quota."""
+    return _env_json("GOOGLE_OAUTH_JSON") is not None
 def creds():
-    v = os.environ["GOOGLE_SERVICE_ACCOUNT_JSON"].strip()
-    try: info = json.loads(v)
-    except Exception: info = json.loads(base64.b64decode(v))
-    return service_account.Credentials.from_service_account_info(info, scopes=["https://www.googleapis.com/auth/drive"])
+    o = _env_json("GOOGLE_OAUTH_JSON")
+    if o:
+        from google.oauth2.credentials import Credentials
+        return Credentials(None, refresh_token=o["refresh_token"], client_id=o["client_id"],
+                           client_secret=o["client_secret"], token_uri="https://oauth2.googleapis.com/token", scopes=SCOPES)
+    return service_account.Credentials.from_service_account_info(_env_json("GOOGLE_SERVICE_ACCOUNT_JSON"), scopes=SCOPES)
 def svc(): return build("drive", "v3", credentials=creds(), cache_discovery=False)
 def list_folder(s, folder=FOLDER):
     out, tok = [], None

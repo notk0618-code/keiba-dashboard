@@ -3,7 +3,12 @@
 このブランチはスクリプト置き場です。公開ページ（main ブランチ）には影響しません。
 Claude のクラウド環境 `keiba`（環境変数 `GOOGLE_SERVICE_ACCOUNT_JSON`）で動かします。鍵はここに置きません。
 
+毎時の自動実行は `auto.sh` です（成績フルセット→週次、当日出走馬→1. 日々の予想、特別登録→7-2 暫定予想）。
+予想は新しいファイルを作るため、本人アカウントのOAuthトークン `GOOGLE_OAUTH_JSON` があるときだけ動きます。
+
 ```bash
+bash auto.sh           # アップを判定して必要な処理を実行 → Drive書き戻し → 公開
+bash auto.sh trial     # 判定と実行のみ（書き戻し・公開なし）
 bash weekly.sh check   # 新しい成績フルセットが未取り込みか確認（読み取りのみ）
 bash weekly.sh trial   # 一通り実行するが、Drive書き戻し・公開はしない
 bash weekly.sh prod    # 実行 → Driveへ書き戻し → 公開ページをpush
