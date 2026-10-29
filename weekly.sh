@@ -31,7 +31,7 @@ git -C "$SITE" fetch -q origin main && git -C "$SITE" checkout -q main && git -C
 mkdir -p "$(dirname "$KDB")"
 python3 "$HERE/mirror.py" "$KDB"
 FLAG=""; [ "$MODE" = trial ] && FLAG="--trial"
-python3 "$HERE/weekly_runner.py" $FLAG --date "$DATE" --site "$SITE" 2>&1 | tee "$WORK/run_$DATE.log" | grep -E "^\[runner\]|🚨|振り返り結果|複勝率|Traceback|Error" || true
+python3 "$HERE/weekly_runner.py" $FLAG --date "$DATE" --site "$SITE" 2>&1 | tee "$WORK/run_$DATE.log" | grep -E "^\[runner\]|🚨|^=== .*振り返り結果|^指数トップ|^堅軸|Traceback|Error:" || true
 grep -q '^\[runner\] RESULT' "$WORK/run_$DATE.log" || { echo "[weekly] runner failed; see $WORK/run_$DATE.log"; tail -30 "$WORK/run_$DATE.log"; exit 1; }
 if [ "$MODE" = prod ]; then
   python3 "$HERE/writeback.py" "$KDB"
