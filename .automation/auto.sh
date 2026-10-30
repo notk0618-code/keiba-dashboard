@@ -3,7 +3,7 @@
 #   auto.sh          -> plan, run, write back to Drive, push the site
 #   auto.sh trial    -> plan and run, but no write-back or push
 # Jobs: 成績フルセット → weekly_runner (0-2〜0-4 + 7-25 verification); 当日出走馬 → daily_runner toujitsu (1.);
-#       特別登録 → daily_runner tokubetsu (7-2). One mirror, jobs in that order, one write-back, one push.
+#       特別登録 → daily_runner tokubetsu (7-2); race day with races left → daily_runner odds (JRA odds refresh). One mirror, jobs in that order, one write-back, one push.
 set -euo pipefail
 MODE=${1:-prod}
 HERE=$(cd "$(dirname "$0")" && pwd)
@@ -30,7 +30,7 @@ git -C "$SITE" fetch -q origin main && git -C "$SITE" checkout -q main && git -C
 mkdir -p "$(dirname "$KDB")"
 python3 "$HERE/mirror.py" "$KDB"
 FLAG=""; [ "$MODE" = trial ] && FLAG="--trial"
-FILTER='^\[runner\]|🚨|^=== .*振り返り結果|^指数トップ|^堅軸|^予測の一致率|^\[.*\] 起点|Traceback|Error:'
+FILTER='^\[runner\]|^\[odds\]|🚨|^=== .*振り返り結果|^指数トップ|^堅軸|^予測の一致率|^\[.*\] 起点|Traceback|Error:'
 run() {  # run one job; stop everything if it did not reach its RESULT line
   local log="$WORK/run_$1.log"; shift
   python3 "$@" $FLAG --site "$SITE" 2>&1 | tee "$log" | grep -E "$FILTER" || true
