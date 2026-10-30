@@ -2,7 +2,9 @@
 {"weekly": "<YYYYMMDD>"|null, "daily": [{"kind": "toujitsu"|"tokubetsu", "file": ..., "dates": [...]}]}
 - toujitsu: newest 当日出走馬YYYYMMDD*.csv per race date (today or later, JST) that is newer than its prediction_log.
 - tokubetsu: newest 特別登録*.csv whose race dates are still ahead, have no 当日出走馬 file yet, and are newer than
-  their 当日出走馬YYMMDD_特別登録_分割.csv. Race dates come from the file name (8 digits, or 8+4 for two days)."""
+  their 当日出走馬YYMMDD_特別登録_分割.csv. Race dates come from the file name (8 digits, or 8+4 for two days).
+- odds: today's 当日出走馬 again, when it is already predicted but JRA still has races to run today (post time more
+  than 5 minutes away), so each run on a race day republishes with JRA's current odds."""
 import sys, os, re, json, subprocess, datetime as dt
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))); import gdrive
 JST = dt.timezone(dt.timedelta(hours=9))
@@ -27,6 +29,15 @@ for f in fs:
 for d, f in sorted(latest.items()):
     if f['modifiedTime'] > mt(f'prediction_log_{d[2:]}.parquet'):
         plan['daily'].append({'kind': 'toujitsu', 'file': f['name'], 'dates': [d]})
+
+if today in latest and not any(j['kind'] == 'toujitsu' and today in j['dates'] for j in plan['daily']):
+    try:
+        import jra_odds
+        left = jra_odds.remaining(today)
+        print(f'[plan] JRA races still to run today: {len(left)}', file=sys.stderr)
+        if left: plan['daily'].append({'kind': 'odds', 'file': latest[today]['name'], 'dates': [today]})
+    except Exception as e:
+        print(f'[plan] JRA check failed, no odds refresh: {e}', file=sys.stderr)
 
 def tk_dates(name):
     m = re.match(r'特別登録(\d{8})(\d{4})?', name)
