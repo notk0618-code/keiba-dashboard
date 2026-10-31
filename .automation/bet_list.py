@@ -23,7 +23,7 @@ import pandas as pd
 ALPHA = 0.5         # weight of the model vs the market (fitted on the first half of the 7/26〜10/26 logs)
 EV_MIN = 1.1        # minimum expected value (payout per yen) to list a bet
 UNIT = 100          # yen per bet while verifying
-CAPS = {'EV': 3000, '指数穴': 4000}   # yen per day for each rule; past it, the lowest-EV bets are dropped
+DAILY_CAP = 10000   # yen per day for all rules together; past it, the lowest-EV bets are dropped
 IDX_TOP = 2         # 指数穴: index rank in the race at most this
 POP_MIN = 6         # 指数穴: popularity (by current win odds) at least this
 BANKROLL = 10000    # yen, only for the quarter-Kelly reference amount
@@ -109,7 +109,7 @@ def _page(date6, bets, dropped, rec, as_of):
     e = html.escape
     day = f'20{date6[:2]}/{date6[2:4]}/{date6[4:]}'
     recs = ''
-    for rule, kind in [(r, k) for r in CAPS for k in ('単勝', '複勝')]:
+    for rule, kind in [(r, k) for r in LABEL for k in ('単勝', '複勝')]:
         t = rec.get((rule, kind))
         if not t: recs += f'<li>{LABEL[rule]} {kind}: まだ結果の出た記録がありません（記録は2026/11/1から）</li>'; continue
         roi = t['ret'] / t['stake'] * 100
@@ -137,7 +137,7 @@ th{{background:#111;color:#fff;position:sticky;top:0}} tr.done td{{color:#bbb;te
 <div class="warn">これは投票候補の一覧です。自動では投票しません。オッズは{asof}です。締切までにオッズは動くので、条件を満たしたままか確認し、納得したものだけをご自身で投票してください。</div>
 <div class="note">{LABEL['EV']}: 期待値（推定確率×オッズ）が{EV_MIN:.1f}以上。推定確率はモデルと市場（オッズ）を{ALPHA:.0%}ずつ混ぜた値、複勝のオッズは下限です。<br>
 {LABEL['指数穴']}: 指数がレース内{IDX_TOP}位以内なのに、現在のオッズで{POP_MIN}番人気以下の馬（単勝と複勝）。両方に当てはまる馬は🎯として数えます。<br>
-検証中のため1点{UNIT:,}円・1日の上限は🎯{CAPS['EV']:,}円・🐎{CAPS['指数穴']:,}円。合計 <b>{len(bets)}点 {total:,}円</b>{f'（上限を超えたため期待値の低い順に{dropped}点を外しています）' if dropped else ''}。
+検証中のため1点{UNIT:,}円・1日の上限{DAILY_CAP:,}円（両ルール合計）。合計 <b>{len(bets)}点 {total:,}円</b>{f'（上限を超えたため期待値の低い順に{dropped}点を外しています）' if dropped else ''}。
 「ケリー参考」は資金{BANKROLL:,}円で1/4ケリーにした場合の金額（上限{KELLY_CAP:,}円）で、参考表示です。負けを取り戻すために賭け金を増やす買い方はしません。</div>
 <div class="note">これまでの実績（各レースの発走前に出していた候補を、確定払戻で集計）</div><ul>{recs}</ul>
 <div class="wrap"><table><tr><th>発走</th><th>レース</th><th>券種</th><th>馬番 馬名</th><th>金額</th><th>オッズ</th><th>推定確率</th><th>期待値</th><th>ケリー参考</th><th>根拠</th></tr>{trs or '<tr><td colspan=10>本日の候補はありません</td></tr>'}</table></div>
@@ -179,12 +179,8 @@ def build(con, kdb, site, date6, jra=None, now=None):
 
     if kept is not None and '根拠' not in kept.columns: kept = kept.assign(根拠='EV')
     new = new.sort_values('期待値', ascending=False)
-    parts = []
-    for rule, cap in CAPS.items():
-        spent = int(kept.loc[kept['根拠'] == rule, '金額'].sum()) if kept is not None else 0
-        n = new[new['根拠'] == rule]
-        parts.append(n[n['金額'].cumsum() <= cap - spent])
-    keep_new = pd.concat(parts)
+    budget = DAILY_CAP - (int(kept['金額'].sum()) if kept is not None else 0)
+    keep_new = new[new['金額'].cumsum() <= budget]
     dropped = len(new) - len(keep_new)
     bets = pd.concat([x for x in (kept, keep_new[COLS]) if x is not None and len(x)] or [keep_new[COLS]], ignore_index=True).sort_values(['発走', '場所', 'R', '券種'])
     bets['R'] = bets['R'].astype(int); bets['馬番'] = bets['馬番'].astype(int)
