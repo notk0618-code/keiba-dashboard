@@ -5,6 +5,8 @@ and github.io is unreachable, so race_archive keys are read from the clone too."
 import sys, os, types, json, time, subprocess
 KDB = '/content/drive/MyDrive/keiba_db'
 STAGED = []
+HEADER_ANCHOR = '<a id="confidence-link-icon" href="index.html#confidence-ranking" style="color:#ff6600; text-decoration:none; font-size:16px;" title="堅軸TOP10">🔥</a>'
+BETS_LINK = '<a id="bets-link-icon" href="bets.html" style="color:#ff6600; text-decoration:none; font-size:16px;" title="買い目リスト">🎫</a>'
 
 def load(site):
     os.chdir(KDB)
@@ -31,6 +33,11 @@ def load(site):
     code = open(f'{KDB}/keiba_dashboard_full_restore_v7.py', encoding='utf-8').read()
     exec(compile(code, 'keiba_dashboard_full_restore_v7.py', 'exec'), ns)
     print(f'[runner] restore_v7 loaded in {time.time()-t0:.0f}s')
+    _header = ns['build_common_header']
+    def _header_with_bets(*x, **k):  # add the bet list (bet_list.py) to the shared header without editing restore_v7
+        h = _header(*x, **k)
+        return h if BETS_LINK in h else h.replace(HEADER_ANCHOR, HEADER_ANCHOR + '\n' + BETS_LINK, 1)
+    ns['build_common_header'] = _header_with_bets
     def _stage_bytes(github_filename, data):
         dst = os.path.join(site, github_filename); os.makedirs(os.path.dirname(dst) or site, exist_ok=True)
         with open(dst, 'wb') as f: f.write(data)
