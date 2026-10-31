@@ -48,7 +48,8 @@ def races(list_cname):
     return out
 
 def win_odds(cname):
-    """(as_of 'HH:MM' or '', [{'num', 'waku', 'name', 'odds'}]); odds is None for 取消/除外 or before sales open."""
+    """(as_of 'HH:MM' or '', [{'num', 'waku', 'name', 'odds', 'place'}]); odds is None for 取消/除外 or before sales open,
+    place is the 複勝 (min, max) range or None."""
     page = _get(cname)
     m = re.search(r'(\d{1,2})時(\d{2})分現在オッズ', page)
     as_of = f'{int(m.group(1)):02d}:{m.group(2)}' if m else ''
@@ -61,8 +62,10 @@ def win_odds(cname):
         waku = re.search(r'alt="枠(\d)', row)  # the 枠 cell spans rows when a 枠 holds two or three horses
         if waku: waku_now = int(waku.group(1))
         o = _text(tan.group(1))
+        fk = re.search(r'<td class="odds_fuku">.*?class="min">([\d.]+)<.*?class="max">([\d.]+)<', row, re.S)
         horses.append({'num': int(num.group(1)), 'waku': waku_now,
-                       'name': _text(name.group(1)), 'odds': float(o) if re.fullmatch(r'\d+(\.\d+)?', o) else None})
+                       'name': _text(name.group(1)), 'odds': float(o) if re.fullmatch(r'\d+(\.\d+)?', o) else None,
+                       'place': (float(fk.group(1)), float(fk.group(2))) if fk else None})
     return as_of, horses
 
 def fetch(date, with_odds=True):

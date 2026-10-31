@@ -20,7 +20,7 @@ ns['enable_af_decay_penalty'](); ns['enable_weight_mult']()
 t = time.time()
 ns['calib_models'] = ns['build_calibration_models'](train_start='20210101', train_end='20261231')
 RESULT['calib_sec'] = round(time.time() - t)
-JRA = {}  # JRA's races for the day, kept for the bet list's post times
+JRA = {}  # JRA's races for the day (post times, 単勝・複勝 odds), kept for the bet list
 
 def apply_jra_odds(csv):
     """Overwrite 本日オッズ/単勝オッズ/本日人気 in the converted CSV with JRA's current odds, matched by (場所, R, 馬名)."""
@@ -76,9 +76,7 @@ ns['rebuild_and_publish_calendar']()
 if a.kind in ('toujitsu', 'odds'):
     import re, bet_list
     try:
-        RESULT['bets'] = bet_list.build(ns['con'], keiba_env.KDB, a.site, re.search(r'20(\d{6})', a.file).group(1),
-            posts={(v, no): r.get('post', '') for v, rs in JRA.items() for no, r in rs.items()},
-            as_of={v: max((r.get('as_of') or '' for r in rs.values()), default='') for v, rs in JRA.items()})
+        RESULT['bets'] = bet_list.build(ns['con'], keiba_env.KDB, a.site, re.search(r'20(\d{6})', a.file).group(1), jra=JRA)
     except Exception as e:  # the bet list is extra: never let it block the predictions from publishing
         print(f'[bets] failed: {e}'); RESULT['bets'] = {'error': str(e)[:200]}
 keiba_env.finish(ns, a.site, a.trial, f'{a.kind} {a.file} (cloud)', RESULT)
