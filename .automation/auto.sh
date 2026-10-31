@@ -30,7 +30,7 @@ git -C "$SITE" fetch -q origin main && git -C "$SITE" checkout -q main && git -C
 mkdir -p "$(dirname "$KDB")"
 python3 "$HERE/mirror.py" "$KDB"
 FLAG=""; [ "$MODE" = trial ] && FLAG="--trial"
-FILTER='^\[runner\]|^\[odds\]|🚨|^=== .*振り返り結果|^指数トップ|^堅軸|^予測の一致率|^\[.*\] 起点|Traceback|Error:'
+FILTER='^\[runner\]|^\[odds\]|^\[bets\]|🚨|^=== .*振り返り結果|^指数トップ|^堅軸|^予測の一致率|^\[.*\] 起点|Traceback|Error:'
 run() {  # run one job; stop everything if it did not reach its RESULT line
   local log="$WORK/run_$1.log"; shift
   python3 "$@" $FLAG --site "$SITE" 2>&1 | tee "$log" | grep -E "$FILTER" || true
