@@ -1,7 +1,8 @@
 """Run runbook 1 (当日出走馬 → 予想・公開) or 7-2 (特別登録 → 暫定予想) outside Colab (see keiba_env.py).
 Track conditions come from 7-25 predict_track_by_race (JRA 馬場情報 + Open-Meteo; falls back to 良 if unreachable).
 For 当日出走馬, win odds/人気 (and 馬番・枠番 when the file has none yet) are replaced by JRA's official odds when
-JRA already sells that day (jra_odds.py). kind `odds` is the same run, planned on race days to refresh the odds."""
+JRA already sells that day (jra_odds.py). kind `odds` is the same run, planned on race days to refresh the odds.
+Both also write the review-only bet list (bet_list.py: bets_YYMMDD.html/.csv, bets.html); nothing is voted."""
 import sys, os, argparse, json, time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import keiba_env
@@ -19,6 +20,7 @@ ns['enable_af_decay_penalty'](); ns['enable_weight_mult']()
 t = time.time()
 ns['calib_models'] = ns['build_calibration_models'](train_start='20210101', train_end='20261231')
 RESULT['calib_sec'] = round(time.time() - t)
+JRA = {}  # JRA's races for the day, kept for the bet list's post times
 
 def apply_jra_odds(csv):
     """Overwrite 本日オッズ/単勝オッズ/本日人気 in the converted CSV with JRA's current odds, matched by (場所, R, 馬名)."""
@@ -29,6 +31,7 @@ def apply_jra_odds(csv):
     except Exception as e:
         print(f'[odds] JRA odds unavailable, keeping the file odds: {e}'); return {'error': str(e)[:200]}
     if not jra: print(f'[odds] JRA lists no racing on {date} yet'); return {}
+    JRA.update(jra)
     norm = lambda x: unicodedata.normalize('NFKC', str(x)).replace(' ', '')
     path = f'{keiba_env.KDB}/{csv}'
     df = pd.read_csv(path, encoding='cp932', dtype=str)
@@ -70,4 +73,12 @@ for csv in targets:
     RESULT['track'][csv] = {k: v for k, v in tc.items() if '_R' not in k}
     ns['mobile_quick_update'](csv, tc)
 ns['rebuild_and_publish_calendar']()
+if a.kind in ('toujitsu', 'odds'):
+    import re, bet_list
+    try:
+        RESULT['bets'] = bet_list.build(ns['con'], keiba_env.KDB, a.site, re.search(r'20(\d{6})', a.file).group(1),
+            posts={(v, no): r.get('post', '') for v, rs in JRA.items() for no, r in rs.items()},
+            as_of={v: max((r.get('as_of') or '' for r in rs.values()), default='') for v, rs in JRA.items()})
+    except Exception as e:  # the bet list is extra: never let it block the predictions from publishing
+        print(f'[bets] failed: {e}'); RESULT['bets'] = {'error': str(e)[:200]}
 keiba_env.finish(ns, a.site, a.trial, f'{a.kind} {a.file} (cloud)', RESULT)
