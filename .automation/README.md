@@ -13,6 +13,9 @@ Driveに `成績フルセットYYYYMMDD*.csv` がまだ無ければ、`jra_resul
 TARGETと同じ形の `成績フルセットYYYYMMDD_JRA.csv`（80列）・`馬別フルセットYYYYMMDD_JRA.csv`（56列）と、全券種の払戻 `払戻YYYYMMDD_JRA.csv`
 （ワイド・馬連・3連複なども）を作ってDriveに置きます。あとはTARGETのファイルと同じく週次処理（0-2〜0-4）に流れます。
 騎手・調教師・馬主などの表記は、DBの過去行（対象日より前）からTARGETの書き方に合わせます。1週末で約8分（1秒1回以下のアクセス）。
+特別登録も同様に、JRAの「特別レース登録馬」に次の週末の登録が出て、Driveに `特別登録YYYYMMDD*.csv` も `当日出走馬YYYYMMDD*.csv` も無ければ、
+TARGETと同じ33列の `特別登録YYYYMMDD_JRA.csv` を作って置きます（騎手・枠・オッズは未確定のため空欄、ハンデ戦の斤量は発表前なら空欄）。
+この作成は `plan_jobs.py` の最初にも行うので、定期実行の判定でそのまま拾われます（`JRA_BUILD=0` で省略）。
 TARGETの成績フルセットも同じ週末に置かれていれば、両方を列ごとに比べた `JRA照合YYYYMMDD.txt` をDriveに置きます（並行期間の確認用）。
 
 ```bash
