@@ -2,6 +2,7 @@
 # Hourly entry point: find new uploads in keiba_db and run whatever they need, then write back and publish.
 #   auto.sh          -> plan, run, write back to Drive, push the site
 #   auto.sh trial    -> plan and run, but no write-back or push
+# Before planning, jra_weekly.py makes 成績フルセット from JRA's site when TARGET's is missing.
 # Jobs: 成績フルセット → weekly_runner (0-2〜0-4 + 7-25 verification); 当日出走馬 → daily_runner toujitsu (1.);
 #       特別登録 → daily_runner tokubetsu (7-2); race day with races left → daily_runner odds (JRA odds refresh). One mirror, jobs in that order, one write-back, one push.
 set -euo pipefail
@@ -20,6 +21,11 @@ fi
 export PYTHONPATH="$DUCK" PYTHONUNBUFFERED=1
 cd "$WORK"
 
+# Monday step: no TARGET 成績フルセット for the last weekend → build it from JRA's result pages and upload it (jra_weekly.py)
+if [ -z "${PLAN:-}" ]; then
+  if [ "$MODE" = trial ]; then python3 "$HERE/jra_weekly.py" --dry-run || echo "[auto] jra_weekly failed (continuing)"
+  else python3 "$HERE/jra_weekly.py" || echo "[auto] jra_weekly failed (continuing)"; fi
+fi
 PLAN=${PLAN:-$(python3 "$HERE/plan_jobs.py")}  # PLAN=<json> forces a plan (testing, manual reruns)
 echo "[auto] plan $PLAN"
 WEEKLY=$(echo "$PLAN" | python3 -c 'import json,sys; print(json.load(sys.stdin)["weekly"] or "")')
@@ -30,7 +36,7 @@ git -C "$SITE" fetch -q origin main && git -C "$SITE" checkout -q main && git -C
 mkdir -p "$(dirname "$KDB")"
 python3 "$HERE/mirror.py" "$KDB"
 FLAG=""; [ "$MODE" = trial ] && FLAG="--trial"
-FILTER='^\[runner\]|^\[odds\]|^\[bets\]|🚨|^=== .*振り返り結果|^指数トップ|^堅軸|^予測の一致率|^\[.*\] 起点|Traceback|Error:'
+FILTER='^\[jra-weekly\]|^\[runner\]|^\[odds\]|^\[bets\]|🚨|^=== .*振り返り結果|^指数トップ|^堅軸|^予測の一致率|^\[.*\] 起点|Traceback|Error:'
 run() {  # run one job; stop everything if it did not reach its RESULT line
   local log="$WORK/run_$1.log"; shift
   python3 "$@" $FLAG --site "$SITE" 2>&1 | tee "$log" | grep -E "$FILTER" || true
