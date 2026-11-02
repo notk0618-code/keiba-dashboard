@@ -21,12 +21,12 @@ fi
 export PYTHONPATH="$DUCK" PYTHONUNBUFFERED=1
 cd "$WORK"
 
-# Monday step: no TARGET 成績フルセット for the last weekend → build it from JRA's result pages and upload it (jra_weekly.py)
+# JRA build step (jra_weekly.py): missing 成績フルセット (last weekend) / 特別登録 (next weekend) → build from JRA's site and upload
 if [ -z "${PLAN:-}" ]; then
   if [ "$MODE" = trial ]; then python3 "$HERE/jra_weekly.py" --dry-run || echo "[auto] jra_weekly failed (continuing)"
   else python3 "$HERE/jra_weekly.py" || echo "[auto] jra_weekly failed (continuing)"; fi
 fi
-PLAN=${PLAN:-$(JRA_PENDING_CHECK=0 python3 "$HERE/plan_jobs.py")}  # jra_weekly already ran: plan only real files  # PLAN=<json> forces a plan (testing, manual reruns)
+PLAN=${PLAN:-$(JRA_BUILD=0 python3 "$HERE/plan_jobs.py")}  # jra_weekly already ran: plan only real files  # PLAN=<json> forces a plan (testing, manual reruns)
 echo "[auto] plan $PLAN"
 WEEKLY=$(echo "$PLAN" | python3 -c 'import json,sys; print(json.load(sys.stdin)["weekly"] or "")')
 JOBS=$(echo "$PLAN" | python3 -c 'import json,sys; [print(j["kind"], j["file"]) for j in json.load(sys.stdin)["daily"]]')

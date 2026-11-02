@@ -1,16 +1,22 @@
-"""Decide which uploads need processing (read-only). Prints one JSON object:
+"""Decide which uploads need processing (read-only, apart from the JRA build step below). Prints one JSON object:
 {"weekly": "<YYYYMMDD>"|null, "daily": [{"kind": "toujitsu"|"tokubetsu", "file": ..., "dates": [...]}]}
 - toujitsu: newest 当日出走馬YYYYMMDD*.csv per race date (today or later, JST) that is newer than its prediction_log.
 - tokubetsu: newest 特別登録*.csv whose race dates are still ahead, have no 当日出走馬 file yet, and are newer than
   their 当日出走馬YYMMDD_特別登録_分割.csv. Race dates come from the file name (8 digits, or 8+4 for two days).
-- weekly is also set when the last finished race weekend has no 成績フルセット on Drive at all: auto.sh then builds
-  it from JRA's site (jra_weekly.py) before planning again.
+- Before planning, jra_weekly.py builds from JRA's site whatever TARGET would have uploaded and is missing
+  (成績フルセット for the last weekend, 特別登録 for the next); skipped with JRA_BUILD=0.
 - odds: today's 当日出走馬 again, when it is already predicted but JRA still has races to run today (post time more
   than 5 minutes away), so each run on a race day republishes with JRA's current odds."""
 import sys, os, re, json, subprocess, datetime as dt
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))); import gdrive
 JST = dt.timezone(dt.timedelta(hours=9))
 today = dt.datetime.now(JST).strftime('%Y%m%d')
+if os.environ.get('JRA_BUILD') != '0':
+    # JRA's site replaces TARGET's uploads: build missing 成績フルセット (Monday) / 特別登録 (Sunday-) first, so the plan
+    # below sees them. auto.sh runs this itself and calls the planner with JRA_BUILD=0.
+    r = subprocess.run([sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'jra_weekly.py')],
+                       capture_output=True, text=True)
+    for line in r.stdout.splitlines(): print(line, file=sys.stderr)
 s = gdrive.svc(); fs = gdrive.list_folder(s)
 by = {f['name']: f for f in fs}
 mt = lambda n: by[n]['modifiedTime'] if n in by else ''
@@ -54,17 +60,6 @@ for f in sorted(tks, key=lambda f: f['modifiedTime'], reverse=True)[:1]:
     ds = [d for d in tk_dates(f['name']) if d >= today and d not in latest]
     if ds and any(f['modifiedTime'] > mt(f'当日出走馬{d[2:]}_特別登録_分割.csv') for d in ds):
         plan['daily'].append({'kind': 'tokubetsu', 'file': f['name'], 'dates': ds})
-if not plan['weekly'] and gdrive.can_create() and os.environ.get('JRA_PENDING_CHECK') != '0':
-    # Monday: no 成績フルセット for the last weekend yet → auto.sh builds it from JRA's site (jra_weekly.py) first,
-    # so report the weekly job as due here; otherwise a "nothing new" plan would stop the run before that step.
-    try:
-        import jra_weekly
-        d0 = jra_weekly.pending(today, set(by))
-        if d0:
-            plan['weekly'] = d0
-            print(f'[plan] 成績フルセット{d0} がまだ無いので、JRAサイトから作る予定', file=sys.stderr)
-    except Exception as e:
-        print(f'[plan] JRA weekly check failed: {e}', file=sys.stderr)
 if plan['daily'] and not gdrive.can_create():
     # predictions create new Drive files (prediction_log etc.), which only the owner's OAuth token can do
     print(f"[plan] GOOGLE_OAUTH_JSON がないため予想はスキップ: {[j['file'] for j in plan['daily']]}", file=sys.stderr)

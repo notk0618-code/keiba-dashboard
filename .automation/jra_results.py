@@ -157,7 +157,8 @@ def parse_horse_page(page):
     b = re.match(r'(\d{4})年(\d+)月(\d+)日', f('生年月日'))
     return {'sire': f('父'), 'dam': re.sub(r'\s*産駒$', '', f('母')), 'damsire': f('母の父'), 'owner': f('馬主名'),
             'breeder': f('生産牧場', '生産者'), 'coat': f('毛色'), 'birth': f'{b.group(1)}{int(b.group(2)):02d}{int(b.group(3)):02d}' if b else '',
-            'affil': {'美浦': '美', '栗東': '栗', '地方': '地', '外国': '外'}.get(aff.group(1), '') if aff else ''}
+            'affil': {'美浦': '美', '栗東': '栗', '地方': '地', '外国': '外'}.get(aff.group(1), '') if aff else '',
+            'sex': f('性別').replace('せん', 'セ'), 'trainer': _nospace(re.sub(r'（.*', '', f('調教師名')))}
 
 # ---------------------------------------------------------------- DB name maps (TARGET spelling)
 class Names:
@@ -374,6 +375,80 @@ def collect(dates, db=None, log=print):
             log(f'[results] {date} {venue}: {sum(1 for r in R if r[3] == venue and r[0] + r[1] + r[2] == date)} races')
     log(f'[results] horse pages fetched: {len(cache)}')
     return R, H, P
+
+# ---------------------------------------------------------------- 特別登録 (special-race nominations)
+TK_TOP = 'pw03trl00/29'
+TK_HEADER = ['年月日', '場所', '競走番号', '馬番号', 'レース名', '芝・ダ', '距離', '馬名', '性別', '年齢', '騎手名', '斤量', '調教師名',
+             '所属', '馬主名', '生産者名', '種牡馬名', '母名', '血統登録番号', '日次', '母父名', '毛色', '枠番号', '前走との間隔',
+             '前走人気', '前走着順', '頭数', '本賞金', '収得賞金', '本日人気', '本日オッズ', '本日着順', 'レースID']
+
+def get_t(cname): return _req('POST', f'{BASE}/JRADB/accessT.html', data={'cname': cname})
+
+def tokubetsu_codes():
+    """{date: [race cname]} of the special races JRA lists on 特別レース登録馬 (the coming weekend)."""
+    out = {}
+    for c in sorted(set(re.findall(r"(pw03tde\d{18}/[0-9A-F]{2})", get_t(TK_TOP)))):
+        out.setdefault(c[17:25], []).append(c)
+    return out
+
+def collect_tokubetsu(db=None, dates=None, log=print):
+    """Rows in TARGET's 特別登録 layout for the listed weekend (騎手・枠・オッズ are not known yet, as in TARGET)."""
+    codes = tokubetsu_codes()
+    dates = sorted(d for d in codes if not dates or d in dates)
+    if not dates: return [], []
+    first = dt.date(int(dates[0][:4]), int(dates[0][4:6]), int(dates[0][6:]))  # this weekend only (early G1 nominations are listed too)
+    dates = [d for d in dates if (dt.date(int(d[:4]), int(d[4:6]), int(d[6:])) - first).days <= 2]
+    names = Names(db, min(dates))
+    meta = {}
+    if db and os.path.exists(db):
+        import duckdb
+        c = duckdb.connect(db, read_only=True)
+        order = "CAST(column00 AS INTEGER)*10000 + CAST(column01 AS INTEGER)*100 + CAST(column02 AS INTEGER)"
+        for hid, sex, tr, aff in c.execute(f"""SELECT column37, arg_max(column14, {order}), arg_max(column34, {order}),
+                arg_max(column35, {order}) FROM horse_race_full GROUP BY 1""").fetchall():
+            if hid: meta[str(hid)[2:]] = (sex, tr, aff)
+        c.close()
+    rows, fetched = [], 0
+    for d in dates:
+        for code in codes[d]:
+            v, kai, nichi, R = code[9:11], code[11:13], code[13:15], code[15:17]
+            page = get_t(code)
+            race = parse_race(page, f'pw01sde10{v}{d[:4]}{kai}{nichi}{R}{d}')
+            race['horses'] = []  # the list is split over several tables (登録馬名1, 2, ...)
+            for row in re.findall(r'<tr>(.*?)</tr>', page[page.find('horse_list_area'):], re.S):
+                hc = re.search(r'<td class="horse">(.*?)</td>', row, re.S)
+                if not hc: continue
+                hid = re.search(r'pw01dud\d\d(\d{10})/', hc.group(1))
+                race['horses'].append({'name': _t(hc.group(1)), 'id': hid.group(1) if hid else '',
+                    'horse_url': (re.search(r'href="([^"]+)"', hc.group(1)) or [None, ''])[1],
+                    'weight': _t((re.search(r'<td class="weight">(.*?)</td>', row, re.S) or [None, ''])[1])})
+            venue = {x: k for k, x in VENUE_CODE.items()}[v]
+            dirt = 'ダート' in race['course'] and '芝' not in race['course']
+            for i, h in enumerate(race['horses'], 1):
+                prof = names.h.get(h['id'])
+                sex, tr, aff = meta.get(h['id'], ('', '', ''))
+                if not prof or not sex:
+                    try: hp = parse_horse_page(_req('GET', BASE + html.unescape(h['horse_url']))); fetched += 1
+                    except Exception as e: hp = {}; log(f'[tokubetsu] horse page failed {h["name"]}: {e}')
+                    prof = prof or hp; sex = sex or hp.get('sex', ''); tr = tr or hp.get('trainer', ''); aff = aff or hp.get('affil', '')
+                birth = str(prof.get('birth', '') or '')
+                rows.append([d[2:], venue, str(race['R']), f'{i:2d}', short_name(race, names), 'ダ' if dirt else '芝', str(race['dist']),
+                    h['name'], sex, str(int(d[:4]) - int(birth[:4])) if birth[:4].isdigit() else '', '', h['weight'], tr, aff,
+                    owner_name(prof.get('owner', '')), owner_name(prof.get('breeder', '')), prof.get('sire', ''), prof.get('dam', ''),
+                    f"UX{h['id'][2:]}", str(race['nichi']), prof.get('damsire', ''), COAT.get(prof.get('coat', ''), prof.get('coat', '')),
+                    '0', '-1', '0', '0', str(len(race['horses'])), '0', '0', '0', '0.0', '0',
+                    f"RX{d}{v}{race['kai']:02d}{race['nichi']:02d}{race['R']:02d}{i:02d}"])
+            log(f'[tokubetsu] {d} {venue}{race["R"]}R {race["name"]}: {len(race["horses"])}頭')
+    log(f'[tokubetsu] horse pages fetched: {fetched}')
+    return dates, rows
+
+def write_tokubetsu(out, d0, rows):
+    import csv
+    os.makedirs(out, exist_ok=True)
+    path = os.path.join(out, f'特別登録{d0}_JRA.csv')
+    with open(path, 'w', encoding='cp932', errors='replace', newline='') as f:
+        w = csv.writer(f, lineterminator='\r\n'); w.writerow(TK_HEADER); w.writerows(rows)
+    return path
 
 def write(out, start, R, H, P):
     import csv

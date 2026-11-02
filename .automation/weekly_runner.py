@@ -77,6 +77,10 @@ if 'review' in steps:
         if not os.path.exists(p): continue
         ns['review_and_record_weekly_accuracy'](pd.read_parquet(p), ymd)
         RESULT['review'][ymd] = 'recorded'
+    if RESULT['review'] and 'publish_review_page' in ns:
+        # review.html is built inside rebuild_all_derived_data(), i.e. before the rows above were recorded:
+        # rebuild it now so the page shows this weekend
+        ns['publish_review_page'](); RESULT['review_page'] = 'rebuilt'
 if 'review' in steps:  # 7-25: score the track-condition predictions against the imported results
     import pandas as pd, datetime as dt
     d0 = dt.date(int(a.date[:4]), int(a.date[4:6]), int(a.date[6:]))
