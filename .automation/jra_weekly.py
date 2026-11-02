@@ -28,6 +28,15 @@ def weekend(today):
         out.append(d)
     return sorted(out)
 
+def pending(today, names):
+    """First date of the finished weekend that has no 成績フルセット on Drive yet (so a JRA build is due), else None.
+    Used by plan_jobs.py so that a run with nothing uploaded still goes on to auto.sh on Mondays."""
+    import jra_odds
+    if jra_odds.meetings(today): return None
+    dates = weekend(today)
+    if not dates: return None
+    return None if any(re.fullmatch(rf'成績フルセット{dates[0]}.*\.csv', n) for n in names) else dates[0]
+
 def upload(s, path, name, mime='text/csv'):
     from googleapiclient.http import MediaFileUpload
     m = MediaFileUpload(path, mimetype=mime, resumable=True)
