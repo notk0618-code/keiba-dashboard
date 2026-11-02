@@ -1,12 +1,33 @@
 <html><head><meta charset="utf-8"><meta name="robots" content="noindex, nofollow">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1"><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png"><link rel="manifest" href="manifest.json"><meta name="theme-color" content="#ff6600">
+<title>予想の振り返り</title>
 <style>
-  body { font-family: sans-serif; background:#f5f5f5; margin:0; padding:12px; max-width:520px; margin-left:auto; margin-right:auto; box-sizing:border-box; }
-  table { width:100%; border-collapse:collapse; background:white; border-radius:8px; overflow:hidden; }
-  th { background:#333; color:white; padding:8px; font-size:12px; text-align:left; }
-  .summary-card { background:white; border-radius:8px; padding:12px; margin-bottom:12px; display:flex; justify-content:space-around; text-align:center; }
-  .summary-card div .label { font-size:11px; color:#888; }
-  .summary-card div .value { font-size:20px; font-weight:bold; color:#ff6600; }
+  body { font-family: sans-serif; background:#f5f5f5; margin:0; padding:12px; max-width:560px; margin-left:auto; margin-right:auto; box-sizing:border-box; color:#222; }
+  h2 { font-size:17px; margin:12px 0 8px; } h3 { font-size:15px; margin:18px 0 6px; }
+  .note { font-size:11px; color:#888; margin:4px 0 8px; line-height:1.5; }
+  .seg { background:#fff; border-radius:8px; padding:10px 12px; margin-bottom:10px; }
+  .segt { font-weight:bold; font-size:15px; } .segd { font-size:11px; color:#888; margin:2px 0 6px; }
+  .kpis { display:flex; gap:10px; } .kpi { flex:1; min-width:0; }
+  .cap { font-size:11px; color:#666; margin-bottom:4px; } .cap .n { float:right; color:#aaa; }
+  .roi { display:flex; justify-content:space-between; align-items:baseline; margin-top:4px; }
+  .roi .lab { font-size:11px; color:#555; } .roi .val { font-size:19px; font-weight:bold; font-variant-numeric:tabular-nums; }
+  .roi .val.good { color:#c0392b; }
+  .bar { position:relative; height:7px; background:#eee; border-radius:4px; margin:2px 0 2px; overflow:hidden; }
+  .bar .fill { height:100%; border-radius:4px; }
+  .bar .bar100 { position:absolute; left:50%; top:-2px; bottom:-2px; width:2px; background:#333; opacity:.55; }
+  .rates { font-size:11px; color:#555; margin-top:6px; }
+  .tabs { display:flex; gap:6px; flex-wrap:wrap; margin:6px 0; }
+  .tab { border:1px solid var(--c); color:var(--c); background:#fff; border-radius:16px; padding:5px 12px; font-size:13px; cursor:pointer; }
+  .tab.on { background:var(--c); color:#fff; }
+  .chart { background:#fff; border-radius:8px; padding:10px 8px 6px; }
+  .chart svg { width:100%; height:auto; display:block; }
+  .legend { font-size:11px; color:#555; display:flex; gap:12px; margin:0 4px 4px; flex-wrap:wrap; }
+  .legend i { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:3px; vertical-align:-1px; }
+  .scroll { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; background:white; border-radius:8px; overflow:hidden; font-size:12px; }
+  th { background:#333; color:white; padding:7px 6px; font-size:11px; text-align:right; white-space:nowrap; } th:first-child { text-align:left; }
+  td { padding:6px; border-bottom:1px solid #eee; white-space:nowrap; } td.r { text-align:right; font-variant-numeric:tabular-nums; }
+  td.b { font-weight:bold; } td .s { font-size:10px; color:#999; } .up { color:#c0392b; font-weight:bold; }
 </style></head><body><div id="top" style="background:#000; margin:-12px -12px 0 -12px; padding:14px 16px; border-bottom:3px solid #ff6600; display:flex; justify-content:space-between; align-items:center; font-family:sans-serif;">
 <a href="index.html" style="color:#fff; font-weight:bold; font-size:17px; letter-spacing:0.5px; text-decoration:none;">AF<span style="color:#ff6600;">Keiba</span>DATA</a>
 <div style="display:flex; gap:14px; align-items:center;">
@@ -38,300 +59,55 @@
 })();
 </script>
 <h2>📊 予想の振り返り</h2>
-<div class="summary-card">
-  <div><div class="label">全期間・堅軸TOP10</div><div class="value">68.85%</div></div>
-  <div><div class="label">直近7日・堅軸TOP10</div><div class="value">61.43%</div></div>
-</div>
-<div class="summary-card">
-  <div><div class="label">全期間・指数トップ</div><div class="value" style="color:#333;">51.83%</div></div>
-  <div><div class="label">直近7日・指数トップ</div><div class="value" style="color:#333;">43.03%</div></div>
-</div>
-<div style="background:white; border-radius:8px; padding:12px; margin-bottom:12px;">
-  <div style="font-size:12px; color:#666; margin-bottom:6px;">堅軸TOP10・複勝率の推移(直近14日)</div>
-  <div style="display:flex; align-items:flex-end; height:110px; overflow-x:auto;">
-            <div style="display:flex; flex-direction:column; align-items:center; margin:0 2px;">
-              <div style="font-size:9px; color:#666;">60</div>
-              <div style="width:16px; height:48px; background:#ff6600; border-radius:2px 2px 0 0;"></div>
-              <div style="font-size:8px; color:#999; writing-mode:vertical-rl;">0919</div>
-            </div>
-            <div style="display:flex; flex-direction:column; align-items:center; margin:0 2px;">
-              <div style="font-size:9px; color:#666;">80</div>
-              <div style="width:16px; height:64px; background:#ff6600; border-radius:2px 2px 0 0;"></div>
-              <div style="font-size:8px; color:#999; writing-mode:vertical-rl;">0920</div>
-            </div>
-            <div style="display:flex; flex-direction:column; align-items:center; margin:0 2px;">
-              <div style="font-size:9px; color:#666;">80</div>
-              <div style="width:16px; height:64px; background:#ff6600; border-radius:2px 2px 0 0;"></div>
-              <div style="font-size:8px; color:#999; writing-mode:vertical-rl;">0921</div>
-            </div>
-            <div style="display:flex; flex-direction:column; align-items:center; margin:0 2px;">
-              <div style="font-size:9px; color:#666;">60</div>
-              <div style="width:16px; height:48px; background:#ff6600; border-radius:2px 2px 0 0;"></div>
-              <div style="font-size:8px; color:#999; writing-mode:vertical-rl;">0922</div>
-            </div>
-            <div style="display:flex; flex-direction:column; align-items:center; margin:0 2px;">
-              <div style="font-size:9px; color:#666;">90</div>
-              <div style="width:16px; height:72px; background:#ff6600; border-radius:2px 2px 0 0;"></div>
-              <div style="font-size:8px; color:#999; writing-mode:vertical-rl;">0926</div>
-            </div>
-            <div style="display:flex; flex-direction:column; align-items:center; margin:0 2px;">
-              <div style="font-size:9px; color:#666;">30</div>
-              <div style="width:16px; height:24px; background:#ff6600; border-radius:2px 2px 0 0;"></div>
-              <div style="font-size:8px; color:#999; writing-mode:vertical-rl;">0927</div>
-            </div>
-            <div style="display:flex; flex-direction:column; align-items:center; margin:0 2px;">
-              <div style="font-size:9px; color:#666;">90</div>
-              <div style="width:16px; height:72px; background:#ff6600; border-radius:2px 2px 0 0;"></div>
-              <div style="font-size:8px; color:#999; writing-mode:vertical-rl;">1003</div>
-            </div>
-            <div style="display:flex; flex-direction:column; align-items:center; margin:0 2px;">
-              <div style="font-size:9px; color:#666;">60</div>
-              <div style="width:16px; height:48px; background:#ff6600; border-radius:2px 2px 0 0;"></div>
-              <div style="font-size:8px; color:#999; writing-mode:vertical-rl;">1004</div>
-            </div>
-            <div style="display:flex; flex-direction:column; align-items:center; margin:0 2px;">
-              <div style="font-size:9px; color:#666;">80</div>
-              <div style="width:16px; height:64px; background:#ff6600; border-radius:2px 2px 0 0;"></div>
-              <div style="font-size:8px; color:#999; writing-mode:vertical-rl;">1017</div>
-            </div>
-            <div style="display:flex; flex-direction:column; align-items:center; margin:0 2px;">
-              <div style="font-size:9px; color:#666;">30</div>
-              <div style="width:16px; height:24px; background:#ff6600; border-radius:2px 2px 0 0;"></div>
-              <div style="font-size:8px; color:#999; writing-mode:vertical-rl;">1018</div>
-            </div>
-            <div style="display:flex; flex-direction:column; align-items:center; margin:0 2px;">
-              <div style="font-size:9px; color:#666;">60</div>
-              <div style="width:16px; height:48px; background:#ff6600; border-radius:2px 2px 0 0;"></div>
-              <div style="font-size:8px; color:#999; writing-mode:vertical-rl;">1024</div>
-            </div>
-            <div style="display:flex; flex-direction:column; align-items:center; margin:0 2px;">
-              <div style="font-size:9px; color:#666;">70</div>
-              <div style="width:16px; height:56px; background:#ff6600; border-radius:2px 2px 0 0;"></div>
-              <div style="font-size:8px; color:#999; writing-mode:vertical-rl;">1025</div>
-            </div>
-            <div style="display:flex; flex-direction:column; align-items:center; margin:0 2px;">
-              <div style="font-size:9px; color:#666;">70</div>
-              <div style="width:16px; height:56px; background:#ff6600; border-radius:2px 2px 0 0;"></div>
-              <div style="font-size:8px; color:#999; writing-mode:vertical-rl;">1031</div>
-            </div>
-            <div style="display:flex; flex-direction:column; align-items:center; margin:0 2px;">
-              <div style="font-size:9px; color:#666;">60</div>
-              <div style="width:16px; height:48px; background:#ff6600; border-radius:2px 2px 0 0;"></div>
-              <div style="font-size:8px; color:#999; writing-mode:vertical-rl;">1101</div>
-            </div></div>
-</div>
-<table>
-  <tr><th>日付</th><th style="text-align:right;">指数トップ</th><th style="text-align:right;">単勝回収率</th><th style="text-align:right;">堅軸TOP10</th><th style="text-align:right;">単勝回収率</th></tr>
-  
-        <tr>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee;">20261101</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right;">50.00%<br><span style="font-size:10px; color:#999;">(10/20)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">67.5%</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#ff6600; font-weight:bold;">60.00%<br><span style="font-size:10px; color:#999;">(6/10)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">67.0%</td>
-        </tr>
-        <tr>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee;">20261031</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right;">65.00%<br><span style="font-size:10px; color:#999;">(13/20)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">93.5%</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#ff6600; font-weight:bold;">70.00%<br><span style="font-size:10px; color:#999;">(7/10)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">58.0%</td>
-        </tr>
-        <tr>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee;">20261025</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right;">45.20%<br><span style="font-size:10px; color:#999;">(14/31)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">76.1%</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#ff6600; font-weight:bold;">70.00%<br><span style="font-size:10px; color:#999;">(7/10)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">30.0%</td>
-        </tr>
-        <tr>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee;">20261024</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right;">40.00%<br><span style="font-size:10px; color:#999;">(12/30)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">83.7%</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#ff6600; font-weight:bold;">60.00%<br><span style="font-size:10px; color:#999;">(6/10)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">142.0%</td>
-        </tr>
-        <tr>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee;">20261018</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right;">25.80%<br><span style="font-size:10px; color:#999;">(8/31)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">99.7%</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#ff6600; font-weight:bold;">30.00%<br><span style="font-size:10px; color:#999;">(3/10)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">51.0%</td>
-        </tr>
-        <tr>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee;">20261017</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right;">41.90%<br><span style="font-size:10px; color:#999;">(13/31)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">149.0%</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#ff6600; font-weight:bold;">80.00%<br><span style="font-size:10px; color:#999;">(8/10)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">24.0%</td>
-        </tr>
-        <tr>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee;">20261004</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right;">33.30%<br><span style="font-size:10px; color:#999;">(6/18)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">42.8%</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#ff6600; font-weight:bold;">60.00%<br><span style="font-size:10px; color:#999;">(6/10)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">99.0%</td>
-        </tr>
-        <tr>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee;">20261003</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right;">40.00%<br><span style="font-size:10px; color:#999;">(8/20)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">57.5%</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#ff6600; font-weight:bold;">90.00%<br><span style="font-size:10px; color:#999;">(9/10)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">68.0%</td>
-        </tr>
-        <tr>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee;">20260927</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right;">30.00%<br><span style="font-size:10px; color:#999;">(6/20)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">165.5%</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#ff6600; font-weight:bold;">30.00%<br><span style="font-size:10px; color:#999;">(3/10)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">31.0%</td>
-        </tr>
-        <tr>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee;">20260926</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right;">50.00%<br><span style="font-size:10px; color:#999;">(10/20)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">54.0%</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#ff6600; font-weight:bold;">90.00%<br><span style="font-size:10px; color:#999;">(9/10)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">125.0%</td>
-        </tr>
-        <tr>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee;">20260922</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right;">70.00%<br><span style="font-size:10px; color:#999;">(7/10)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">112.0%</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#ff6600; font-weight:bold;">60.00%<br><span style="font-size:10px; color:#999;">(6/10)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">51.0%</td>
-        </tr>
-        <tr>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee;">20260921</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right;">80.00%<br><span style="font-size:10px; color:#999;">(16/20)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">20.5%</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#ff6600; font-weight:bold;">80.00%<br><span style="font-size:10px; color:#999;">(8/10)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">14.0%</td>
-        </tr>
-        <tr>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee;">20260920</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right;">55.00%<br><span style="font-size:10px; color:#999;">(11/20)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">275.5%</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#ff6600; font-weight:bold;">80.00%<br><span style="font-size:10px; color:#999;">(8/10)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">173.0%</td>
-        </tr>
-        <tr>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee;">20260919</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right;">31.60%<br><span style="font-size:10px; color:#999;">(6/19)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">13.7%</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#ff6600; font-weight:bold;">60.00%<br><span style="font-size:10px; color:#999;">(6/10)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">68.0%</td>
-        </tr>
-        <tr>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee;">20260906</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right;">60.60%<br><span style="font-size:10px; color:#999;">(20/33)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">187.9%</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#ff6600; font-weight:bold;">60.00%<br><span style="font-size:10px; color:#999;">(6/10)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">62.0%</td>
-        </tr>
-        <tr>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee;">20260905</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right;">54.80%<br><span style="font-size:10px; color:#999;">(17/31)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">9.4%</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#ff6600; font-weight:bold;">80.00%<br><span style="font-size:10px; color:#999;">(8/10)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">0.0%</td>
-        </tr>
-        <tr>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee;">20260830</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right;">35.50%<br><span style="font-size:10px; color:#999;">(11/31)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">59.0%</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#ff6600; font-weight:bold;">40.00%<br><span style="font-size:10px; color:#999;">(4/10)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">60.0%</td>
-        </tr>
-        <tr>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee;">20260829</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right;">39.40%<br><span style="font-size:10px; color:#999;">(13/33)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">100.6%</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#ff6600; font-weight:bold;">50.00%<br><span style="font-size:10px; color:#999;">(5/10)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">121.0%</td>
-        </tr>
-        <tr>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee;">20260823</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right;">51.60%<br><span style="font-size:10px; color:#999;">(16/31)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">186.8%</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#ff6600; font-weight:bold;">70.00%<br><span style="font-size:10px; color:#999;">(7/10)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">101.0%</td>
-        </tr>
-        <tr>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee;">20260822</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right;">42.40%<br><span style="font-size:10px; color:#999;">(14/33)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">75.5%</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#ff6600; font-weight:bold;">80.00%<br><span style="font-size:10px; color:#999;">(8/10)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">182.0%</td>
-        </tr>
-        <tr>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee;">20260816</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right;">43.80%<br><span style="font-size:10px; color:#999;">(14/32)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">90.9%</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#ff6600; font-weight:bold;">60.00%<br><span style="font-size:10px; color:#999;">(6/10)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">64.0%</td>
-        </tr>
-        <tr>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee;">20260815</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right;">56.20%<br><span style="font-size:10px; color:#999;">(18/32)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">88.1%</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#ff6600; font-weight:bold;">80.00%<br><span style="font-size:10px; color:#999;">(8/10)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">94.0%</td>
-        </tr>
-        <tr>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee;">20260809</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right;">69.40%<br><span style="font-size:10px; color:#999;">(25/36)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">78.1%</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#ff6600; font-weight:bold;">80.00%<br><span style="font-size:10px; color:#999;">(8/10)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">79.0%</td>
-        </tr>
-        <tr>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee;">20260808</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right;">80.60%<br><span style="font-size:10px; color:#999;">(29/36)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">140.0%</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#ff6600; font-weight:bold;">100.00%<br><span style="font-size:10px; color:#999;">(10/10)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">265.0%</td>
-        </tr>
-        <tr>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee;">20260802</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right;">80.60%<br><span style="font-size:10px; color:#999;">(29/36)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">266.1%</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#ff6600; font-weight:bold;">80.00%<br><span style="font-size:10px; color:#999;">(8/10)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">145.0%</td>
-        </tr>
-        <tr>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee;">20260801</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right;">75.00%<br><span style="font-size:10px; color:#999;">(27/36)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">171.7%</td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#ff6600; font-weight:bold;">90.00%<br><span style="font-size:10px; color:#999;">(9/10)</span></td>
-          <td style="padding:6px 8px; border-bottom:1px solid #eee; text-align:right; color:#0645AD;">187.0%</td>
-        </tr>
-</table>
-
-<h2 style="font-size:15px; margin-top:20px;">🏟️ 会場×クラス×距離帯 別内訳(件数5以上)</h2>
-<div style="font-size:11px; color:#888; margin-bottom:6px;">単勝回収率は、少数の高配当的中により、大きく変動することがあります(参考値)</div>
-<table>
-  <tr><th>条件</th><th style="text-align:right;">件数</th><th style="text-align:right;">複勝率</th><th style="text-align:right;">単勝的中率</th><th style="text-align:right;">単勝回収率</th></tr>
-  
-            <tr>
-              <td style="padding:5px 8px; border-bottom:1px solid #eee;">阪神・未勝利・mid</td>
-              <td style="padding:5px 8px; border-bottom:1px solid #eee; text-align:right;">8</td>
-              <td style="padding:5px 8px; border-bottom:1px solid #eee; text-align:right;">87.5%</td>
-              <td style="padding:5px 8px; border-bottom:1px solid #eee; text-align:right;">37.5%</td>
-              <td style="padding:5px 8px; border-bottom:1px solid #eee; text-align:right; color:#ff6600; font-weight:bold;">73.8%</td>
-            </tr>
-            <tr>
-              <td style="padding:5px 8px; border-bottom:1px solid #eee;">阪神・1勝クラス・mid</td>
-              <td style="padding:5px 8px; border-bottom:1px solid #eee; text-align:right;">6</td>
-              <td style="padding:5px 8px; border-bottom:1px solid #eee; text-align:right;">16.7%</td>
-              <td style="padding:5px 8px; border-bottom:1px solid #eee; text-align:right;">0.0%</td>
-              <td style="padding:5px 8px; border-bottom:1px solid #eee; text-align:right; color:#ff6600; font-weight:bold;">0.0%</td>
-            </tr>
-            <tr>
-              <td style="padding:5px 8px; border-bottom:1px solid #eee;">阪神・2勝クラス・mid</td>
-              <td style="padding:5px 8px; border-bottom:1px solid #eee; text-align:right;">5</td>
-              <td style="padding:5px 8px; border-bottom:1px solid #eee; text-align:right;">80.0%</td>
-              <td style="padding:5px 8px; border-bottom:1px solid #eee; text-align:right;">0.0%</td>
-              <td style="padding:5px 8px; border-bottom:1px solid #eee; text-align:right; color:#ff6600; font-weight:bold;">0.0%</td>
-            </tr>
-</table>
+<div class="note">主要KPIは単勝・複勝の回収率(各100円で全対象を買った場合の払戻÷購入額)。バーの黒線が100%(収支トントン)、100%以上は赤字で表示。的中率は複勝=3着以内(7頭以下は2着以内)。</div>
+<div class='seg' style='border-top:4px solid #ff6600;'><div class='segt' style='color:#ff6600;'>堅軸TOP10</div><div class='segd'>狙い目本命のうち本命自信度の上位10頭(1日)</div><div class='kpis'><div class='kpi'><div class='cap'>全期間<span class='n'>255頭</span></div><div class='roi'><span class='lab'>単勝回収率</span><span class='val '>97.8%</span></div><div class='bar'><div class='fill' style='width:48.9%; background:#ff6600;'></div><div class='bar100'></div></div><div class='roi'><span class='lab'>複勝回収率</span><span class='val '>92.8%</span></div><div class='bar'><div class='fill' style='width:46.4%; background:#ff6600;'></div><div class='bar100'></div></div><div class='rates'>単勝的中 <b>38.4%</b> ／ 複勝的中 <b>69.4%</b></div></div><div class='kpi'><div class='cap'>直近8開催日<span class='n'>79頭</span></div><div class='roi'><span class='lab'>単勝回収率</span><span class='val '>82.2%</span></div><div class='bar'><div class='fill' style='width:41.1%; background:#ff6600;'></div><div class='bar100'></div></div><div class='roi'><span class='lab'>複勝回収率</span><span class='val '>91.5%</span></div><div class='bar'><div class='fill' style='width:45.8%; background:#ff6600;'></div><div class='bar100'></div></div><div class='rates'>単勝的中 <b>34.2%</b> ／ 複勝的中 <b>70.9%</b></div></div></div></div><div class='seg' style='border-top:4px solid #185fa5;'><div class='segt' style='color:#185fa5;'>指数トップ</div><div class='segd'>各レースで指数(total_score)が最上位の1頭</div><div class='kpis'><div class='kpi'><div class='cap'>全期間<span class='n'>699頭</span></div><div class='roi'><span class='lab'>単勝回収率</span><span class='val good'>116.2%</span></div><div class='bar'><div class='fill' style='width:58.1%; background:#185fa5;'></div><div class='bar100'></div></div><div class='roi'><span class='lab'>複勝回収率</span><span class='val '>94.2%</span></div><div class='bar'><div class='fill' style='width:47.1%; background:#185fa5;'></div><div class='bar100'></div></div><div class='rates'>単勝的中 <b>25.9%</b> ／ 複勝的中 <b>52.2%</b></div></div><div class='kpi'><div class='cap'>直近8開催日<span class='n'>200頭</span></div><div class='roi'><span class='lab'>単勝回収率</span><span class='val good'>100.3%</span></div><div class='bar'><div class='fill' style='width:50.1%; background:#185fa5;'></div><div class='bar100'></div></div><div class='roi'><span class='lab'>複勝回収率</span><span class='val '>70.5%</span></div><div class='bar'><div class='fill' style='width:35.2%; background:#185fa5;'></div><div class='bar100'></div></div><div class='rates'>単勝的中 <b>25.0%</b> ／ 複勝的中 <b>46.5%</b></div></div></div></div><div class='seg' style='border-top:4px solid #2e8b57;'><div class='segt' style='color:#2e8b57;'>指数上位の人気薄</div><div class='segd'>指数2位以内かつ6番人気以下の馬(予想時の人気。未確定なら確定人気)</div><div class='kpis'><div class='kpi'><div class='cap'>全期間<span class='n'>401頭</span></div><div class='roi'><span class='lab'>単勝回収率</span><span class='val good'>148.6%</span></div><div class='bar'><div class='fill' style='width:74.3%; background:#2e8b57;'></div><div class='bar100'></div></div><div class='roi'><span class='lab'>複勝回収率</span><span class='val good'>107.5%</span></div><div class='bar'><div class='fill' style='width:53.8%; background:#2e8b57;'></div><div class='bar100'></div></div><div class='rates'>単勝的中 <b>6.5%</b> ／ 複勝的中 <b>22.2%</b></div></div><div class='kpi'><div class='cap'>直近8開催日<span class='n'>114頭</span></div><div class='roi'><span class='lab'>単勝回収率</span><span class='val '>89.0%</span></div><div class='bar'><div class='fill' style='width:44.5%; background:#2e8b57;'></div><div class='bar100'></div></div><div class='roi'><span class='lab'>複勝回収率</span><span class='val '>62.7%</span></div><div class='bar'><div class='fill' style='width:31.4%; background:#2e8b57;'></div><div class='bar100'></div></div><div class='rates'>単勝的中 <b>5.3%</b> ／ 複勝的中 <b>14.9%</b></div></div></div></div>
+<h3>日別の推移</h3>
+<div class="tabs" id="tabs"><button class='tab' data-k='kenjiku' style='--c:#ff6600;'>堅軸TOP10</button><button class='tab' data-k='top' style='--c:#185fa5;'>指数トップ</button><button class='tab' data-k='ana' style='--c:#2e8b57;'>指数上位の人気薄</button></div>
+<div class="chart"><div class="legend" id="legend"></div><div id="chart"></div></div>
+<div class="note">棒=単勝・複勝の回収率(300%超は上端で切り詰めて数値を表示)。折れ線=複勝的中率。1日の対象が数頭のため、日々の回収率は大きく振れます。</div>
+<div class="scroll"><table id="tbl"></table></div>
+<h3>🏟️ 会場×クラス×距離帯 別内訳(指数トップ・件数5以上)</h3>
+<div class="note">単勝回収率は、少数の高配当的中により、大きく変動することがあります(参考値)</div>
+<div class="scroll"><table>
+  <tr><th>条件</th><th>件数</th><th>複勝率</th><th>単勝的中率</th><th>単勝回収率</th></tr>
+  <tr><td>阪神・未勝利・mid</td><td class='r'>8</td><td class='r'>87.5%</td><td class='r'>37.5%</td><td class='r b'>73.8%</td></tr><tr><td>阪神・1勝クラス・mid</td><td class='r'>6</td><td class='r'>16.7%</td><td class='r'>0.0%</td><td class='r b'>0.0%</td></tr><tr><td>阪神・2勝クラス・mid</td><td class='r'>5</td><td class='r'>80.0%</td><td class='r'>0.0%</td><td class='r b'>0.0%</td></tr>
+</table></div>
+<script>
+const DATA = {"kenjiku": {"label": "堅軸TOP10", "color": "#ff6600", "pts": [{"d": "20260801", "n": 10, "wr": 70.0, "pr": 90.0, "wroi": 187.0, "proi": 118.0, "w": 7, "p": 9}, {"d": "20260802", "n": 10, "wr": 50.0, "pr": 80.0, "wroi": 145.0, "proi": 118.0, "w": 5, "p": 8}, {"d": "20260808", "n": 10, "wr": 70.0, "pr": 90.0, "wroi": 265.0, "proi": 151.0, "w": 7, "p": 9}, {"d": "20260809", "n": 10, "wr": 40.0, "pr": 80.0, "wroi": 79.0, "proi": 103.0, "w": 4, "p": 8}, {"d": "20260815", "n": 10, "wr": 40.0, "pr": 80.0, "wroi": 94.0, "proi": 107.0, "w": 4, "p": 8}, {"d": "20260816", "n": 10, "wr": 20.0, "pr": 60.0, "wroi": 64.0, "proi": 89.0, "w": 2, "p": 6}, {"d": "20260822", "n": 10, "wr": 60.0, "pr": 80.0, "wroi": 182.0, "proi": 107.0, "w": 6, "p": 8}, {"d": "20260823", "n": 10, "wr": 50.0, "pr": 70.0, "wroi": 101.0, "proi": 81.0, "w": 5, "p": 7}, {"d": "20260829", "n": 10, "wr": 50.0, "pr": 50.0, "wroi": 121.0, "proi": 66.0, "w": 5, "p": 5}, {"d": "20260830", "n": 10, "wr": 30.0, "pr": 40.0, "wroi": 60.0, "proi": 48.0, "w": 3, "p": 4}, {"d": "20260905", "n": 10, "wr": 0.0, "pr": 80.0, "wroi": 0.0, "proi": 118.0, "w": 0, "p": 8}, {"d": "20260906", "n": 10, "wr": 40.0, "pr": 50.0, "wroi": 86.0, "proi": 57.0, "w": 4, "p": 5}, {"d": "20260919", "n": 10, "wr": 30.0, "pr": 60.0, "wroi": 68.0, "proi": 81.0, "w": 3, "p": 6}, {"d": "20260920", "n": 10, "wr": 50.0, "pr": 80.0, "wroi": 173.0, "proi": 116.0, "w": 5, "p": 8}, {"d": "20260921", "n": 6, "wr": 16.7, "pr": 66.7, "wroi": 23.3, "proi": 80.0, "w": 1, "p": 4}, {"d": "20260922", "n": 10, "wr": 30.0, "pr": 60.0, "wroi": 51.0, "proi": 83.0, "w": 3, "p": 6}, {"d": "20260926", "n": 10, "wr": 50.0, "pr": 90.0, "wroi": 125.0, "proi": 119.0, "w": 5, "p": 9}, {"d": "20260927", "n": 10, "wr": 20.0, "pr": 30.0, "wroi": 31.0, "proi": 34.0, "w": 2, "p": 3}, {"d": "20261003", "n": 10, "wr": 30.0, "pr": 90.0, "wroi": 68.0, "proi": 113.0, "w": 3, "p": 9}, {"d": "20261004", "n": 10, "wr": 40.0, "pr": 60.0, "wroi": 99.0, "proi": 94.0, "w": 4, "p": 6}, {"d": "20261017", "n": 10, "wr": 20.0, "pr": 90.0, "wroi": 61.0, "proi": 118.0, "w": 2, "p": 9}, {"d": "20261018", "n": 10, "wr": 40.0, "pr": 60.0, "wroi": 124.0, "proi": 77.0, "w": 4, "p": 6}, {"d": "20261024", "n": 10, "wr": 50.0, "pr": 60.0, "wroi": 142.0, "proi": 76.0, "w": 5, "p": 6}, {"d": "20261025", "n": 10, "wr": 20.0, "pr": 70.0, "wroi": 30.0, "proi": 86.0, "w": 2, "p": 7}, {"d": "20261031", "n": 10, "wr": 40.0, "pr": 70.0, "wroi": 58.0, "proi": 79.0, "w": 4, "p": 7}, {"d": "20261101", "n": 9, "wr": 33.3, "pr": 66.7, "wroi": 74.4, "proi": 88.9, "w": 3, "p": 6}]}, "top": {"label": "指数トップ", "color": "#185fa5", "pts": [{"d": "20260801", "n": 36, "wr": 47.2, "pr": 75.0, "wroi": 171.7, "proi": 123.1, "w": 17, "p": 27}, {"d": "20260802", "n": 36, "wr": 30.6, "pr": 80.6, "wroi": 266.1, "proi": 198.3, "w": 11, "p": 29}, {"d": "20260808", "n": 36, "wr": 41.7, "pr": 77.8, "wroi": 140.0, "proi": 161.1, "w": 15, "p": 28}, {"d": "20260809", "n": 36, "wr": 27.8, "pr": 69.4, "wroi": 78.1, "proi": 114.7, "w": 10, "p": 25}, {"d": "20260815", "n": 32, "wr": 25.0, "pr": 53.1, "wroi": 88.1, "proi": 124.1, "w": 8, "p": 17}, {"d": "20260816", "n": 32, "wr": 18.8, "pr": 43.8, "wroi": 90.9, "proi": 94.4, "w": 6, "p": 14}, {"d": "20260822", "n": 33, "wr": 27.3, "pr": 39.4, "wroi": 75.5, "proi": 47.9, "w": 9, "p": 13}, {"d": "20260823", "n": 31, "wr": 29.0, "pr": 51.6, "wroi": 186.8, "proi": 91.3, "w": 9, "p": 16}, {"d": "20260829", "n": 33, "wr": 24.2, "pr": 39.4, "wroi": 100.6, "proi": 90.0, "w": 8, "p": 13}, {"d": "20260830", "n": 31, "wr": 16.1, "pr": 35.5, "wroi": 59.0, "proi": 57.4, "w": 5, "p": 11}, {"d": "20260905", "n": 31, "wr": 3.2, "pr": 54.8, "wroi": 9.4, "proi": 86.5, "w": 1, "p": 17}, {"d": "20260906", "n": 33, "wr": 24.2, "pr": 48.5, "wroi": 195.2, "proi": 107.0, "w": 8, "p": 16}, {"d": "20260919", "n": 19, "wr": 10.5, "pr": 31.6, "wroi": 13.7, "proi": 44.7, "w": 2, "p": 6}, {"d": "20260920", "n": 20, "wr": 40.0, "pr": 55.0, "wroi": 275.5, "proi": 108.0, "w": 8, "p": 11}, {"d": "20260921", "n": 10, "wr": 20.0, "pr": 60.0, "wroi": 41.0, "proi": 76.0, "w": 2, "p": 6}, {"d": "20260922", "n": 10, "wr": 40.0, "pr": 70.0, "wroi": 112.0, "proi": 103.0, "w": 4, "p": 7}, {"d": "20260926", "n": 20, "wr": 20.0, "pr": 50.0, "wroi": 54.0, "proi": 76.0, "w": 4, "p": 10}, {"d": "20260927", "n": 20, "wr": 20.0, "pr": 30.0, "wroi": 165.5, "proi": 77.0, "w": 4, "p": 6}, {"d": "20261003", "n": 20, "wr": 25.0, "pr": 40.0, "wroi": 57.5, "proi": 48.0, "w": 5, "p": 8}, {"d": "20261004", "n": 18, "wr": 16.7, "pr": 33.3, "wroi": 42.8, "proi": 53.9, "w": 3, "p": 6}, {"d": "20261017", "n": 31, "wr": 16.1, "pr": 58.1, "wroi": 191.3, "proi": 101.6, "w": 5, "p": 18}, {"d": "20261018", "n": 31, "wr": 29.0, "pr": 38.7, "wroi": 132.9, "proi": 57.7, "w": 9, "p": 12}, {"d": "20261024", "n": 30, "wr": 26.7, "pr": 40.0, "wroi": 83.7, "proi": 62.7, "w": 8, "p": 12}, {"d": "20261025", "n": 31, "wr": 22.6, "pr": 45.2, "wroi": 76.1, "proi": 72.9, "w": 7, "p": 14}, {"d": "20261031", "n": 20, "wr": 40.0, "pr": 65.0, "wroi": 93.5, "proi": 84.0, "w": 8, "p": 13}, {"d": "20261101", "n": 19, "wr": 26.3, "pr": 52.6, "wroi": 71.1, "proi": 74.2, "w": 5, "p": 10}]}, "ana": {"label": "指数上位の人気薄", "color": "#2e8b57", "pts": [{"d": "20260801", "n": 16, "wr": 6.2, "pr": 37.5, "wroi": 100.6, "proi": 258.1, "w": 1, "p": 6}, {"d": "20260802", "n": 20, "wr": 20.0, "pr": 65.0, "wroi": 734.0, "proi": 337.5, "w": 4, "p": 13}, {"d": "20260808", "n": 20, "wr": 0.0, "pr": 50.0, "wroi": 0.0, "proi": 330.0, "w": 0, "p": 10}, {"d": "20260809", "n": 16, "wr": 12.5, "pr": 37.5, "wroi": 539.4, "proi": 163.8, "w": 2, "p": 6}, {"d": "20260815", "n": 29, "wr": 0.0, "pr": 6.9, "wroi": 0.0, "proi": 58.3, "w": 0, "p": 2}, {"d": "20260816", "n": 23, "wr": 0.0, "pr": 8.7, "wroi": 0.0, "proi": 43.9, "w": 0, "p": 2}, {"d": "20260822", "n": 14, "wr": 0.0, "pr": 7.1, "wroi": 0.0, "proi": 27.1, "w": 0, "p": 1}, {"d": "20260823", "n": 24, "wr": 12.5, "pr": 25.0, "wroi": 202.1, "proi": 76.2, "w": 3, "p": 6}, {"d": "20260829", "n": 25, "wr": 4.0, "pr": 8.0, "wroi": 28.8, "proi": 29.2, "w": 1, "p": 2}, {"d": "20260830", "n": 17, "wr": 11.8, "pr": 35.3, "wroi": 60.6, "proi": 115.3, "w": 2, "p": 6}, {"d": "20260905", "n": 14, "wr": 14.3, "pr": 14.3, "wroi": 190.7, "proi": 57.1, "w": 2, "p": 2}, {"d": "20260906", "n": 15, "wr": 6.7, "pr": 20.0, "wroi": 310.7, "proi": 107.3, "w": 1, "p": 3}, {"d": "20260919", "n": 9, "wr": 11.1, "pr": 33.3, "wroi": 132.2, "proi": 90.0, "w": 1, "p": 3}, {"d": "20260920", "n": 7, "wr": 14.3, "pr": 28.6, "wroi": 442.9, "proi": 181.4, "w": 1, "p": 2}, {"d": "20260921", "n": 6, "wr": 0.0, "pr": 33.3, "wroi": 0.0, "proi": 136.7, "w": 0, "p": 2}, {"d": "20260922", "n": 7, "wr": 14.3, "pr": 28.6, "wroi": 551.4, "proi": 162.9, "w": 1, "p": 2}, {"d": "20260926", "n": 12, "wr": 0.0, "pr": 8.3, "wroi": 0.0, "proi": 13.3, "w": 0, "p": 1}, {"d": "20260927", "n": 13, "wr": 7.7, "pr": 23.1, "wroi": 188.5, "proi": 126.9, "w": 1, "p": 3}, {"d": "20261003", "n": 14, "wr": 0.0, "pr": 21.4, "wroi": 0.0, "proi": 132.9, "w": 0, "p": 3}, {"d": "20261004", "n": 9, "wr": 0.0, "pr": 0.0, "wroi": 0.0, "proi": 0.0, "w": 0, "p": 0}, {"d": "20261017", "n": 18, "wr": 5.6, "pr": 11.1, "wroi": 243.3, "proi": 53.3, "w": 1, "p": 2}, {"d": "20261018", "n": 20, "wr": 10.0, "pr": 10.0, "wroi": 116.5, "proi": 36.5, "w": 2, "p": 2}, {"d": "20261024", "n": 15, "wr": 6.7, "pr": 13.3, "wroi": 60.7, "proi": 40.0, "w": 1, "p": 2}, {"d": "20261025", "n": 20, "wr": 5.0, "pr": 20.0, "wroi": 26.5, "proi": 71.5, "w": 1, "p": 4}, {"d": "20261031", "n": 7, "wr": 14.3, "pr": 28.6, "wroi": 285.7, "proi": 84.3, "w": 1, "p": 2}, {"d": "20261101", "n": 11, "wr": 0.0, "pr": 18.2, "wroi": 0.0, "proi": 89.1, "w": 0, "p": 2}]}};
+let cur = 'kenjiku';
+function pct(v) { return (v === undefined || v === null) ? '-' : v.toFixed(1) + '%'; }
+function draw() {
+  const s = DATA[cur]; const pts = s.pts; const c = s.color;
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.k === cur));
+  document.getElementById('legend').innerHTML = `<span><i style="background:${c}"></i>単勝回収率</span><span><i style="background:${c};opacity:.35"></i>複勝回収率</span><span><i style="background:#333;height:2px;vertical-align:3px"></i>複勝的中率</span><span>点線=100%</span>`;
+  const W = 540, H = 220, L = 30, R = 6, T = 20, B = 34, cap = 300;
+  const n = pts.length, cw = (W - L - R) / Math.max(n, 1), bw = Math.max(2, cw * 0.36);
+  const y = v => T + (H - T - B) * (1 - Math.min(v, cap) / cap);
+  let g = '';
+  [0, 100, 200, 300].forEach(t => { g += `<line x1="${L}" x2="${W - R}" y1="${y(t)}" y2="${y(t)}" stroke="${t === 100 ? '#333' : '#e5e5e5'}" stroke-dasharray="${t === 100 ? '4 3' : ''}"/><text x="${L - 3}" y="${y(t) + 3}" font-size="9" text-anchor="end" fill="#888">${t}</text>`; });
+  let line = [];
+  pts.forEach((p, i) => {
+    const x0 = L + i * cw + cw / 2;
+    if (p.n) {
+      g += `<rect x="${x0 - bw}" y="${y(p.wroi)}" width="${bw}" height="${y(0) - y(p.wroi)}" fill="${c}"><title>${p.d} 単勝回収率 ${pct(p.wroi)}</title></rect>`;
+      g += `<rect x="${x0}" y="${y(p.proi)}" width="${bw}" height="${y(0) - y(p.proi)}" fill="${c}" opacity=".35"><title>${p.d} 複勝回収率 ${pct(p.proi)}</title></rect>`;
+      if (p.wroi > cap) g += `<text x="${x0 - bw / 2}" y="${T - 4}" font-size="8" text-anchor="middle" fill="${c}">${Math.round(p.wroi)}</text>`;
+      if (p.proi > cap) g += `<text x="${x0 + bw / 2}" y="${T - 12}" font-size="8" text-anchor="middle" fill="${c}" opacity=".7">${Math.round(p.proi)}</text>`;
+      line.push(`${x0},${y(p.pr)}`);
+    }
+    if (i % Math.ceil(n / 14) === 0 || i === n - 1) g += `<text x="${x0}" y="${H - B + 12}" font-size="9" text-anchor="middle" fill="#888">${p.d.slice(4, 6)}/${p.d.slice(6)}</text>`;
+  });
+  if (line.length > 1) g += `<polyline points="${line.join(' ')}" fill="none" stroke="#333" stroke-width="1.5"/>`;
+  document.getElementById('chart').innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${s.label}の日別回収率">${g}</svg>`;
+  let t = '<tr><th>日付</th><th>対象</th><th>単勝的中率</th><th>複勝的中率</th><th>単勝回収率</th><th>複勝回収率</th></tr>';
+  pts.slice().reverse().forEach(p => {
+    if (!p.n) { t += `<tr><td>${p.d}</td><td class="r" colspan="5" style="color:#bbb">対象なし</td></tr>`; return; }
+    t += `<tr><td>${p.d}</td><td class="r">${p.n}</td><td class="r">${pct(p.wr)}<br><span class="s">(${p.w}/${p.n})</span></td><td class="r">${pct(p.pr)}<br><span class="s">(${p.p}/${p.n})</span></td>` +
+         `<td class="r ${p.wroi >= 100 ? 'up' : ''}">${pct(p.wroi)}</td><td class="r ${p.proi >= 100 ? 'up' : ''}">${pct(p.proi)}</td></tr>`;
+  });
+  document.getElementById('tbl').innerHTML = t;
+}
+document.getElementById('tabs').addEventListener('click', e => { const b = e.target.closest('.tab'); if (b) { cur = b.dataset.k; draw(); } });
+draw();
+</script>
 </body></html>
