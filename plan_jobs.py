@@ -10,7 +10,7 @@ today = dt.datetime.now(JST).strftime('%Y%m%d')
 s = gdrive.svc(); fs = gdrive.list_folder(s)
 by = {f['name']: f for f in fs}
 mt = lambda n: by[n]['modifiedTime'] if n in by else ''
-plan = {'weekly': None, 'daily': []}
+plan = {'weekly': None, 'daily': [], 'nar': False}
 
 chk = subprocess.run([sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'check_needed.py')],
                      capture_output=True, text=True)
@@ -45,4 +45,12 @@ if plan['daily'] and not gdrive.can_create():
     # predictions create new Drive files (prediction_log etc.), which only the owner's OAuth token can do
     print(f"[plan] GOOGLE_OAUTH_JSON がないため予想はスキップ: {[j['file'] for j in plan['daily']]}", file=sys.stderr)
     plan['daily'] = []
+# 地方ダートグレード: a graded race at a NAR track from 3 days ago to tomorrow -> nar_runner (predict / verify)
+try:
+    import nar_lib
+    d0 = dt.datetime.now(JST).date()
+    win = {(d0 + dt.timedelta(days=k)).strftime('%Y%m%d') for k in range(-3, 2)}
+    plan['nar'] = any(r['date'] in win for y in {w[:4] for w in win} for r in nar_lib.schedule(y))
+except Exception as e:
+    print(f'[plan] 地方グレード日程の取得に失敗: {e}', file=sys.stderr)
 print(json.dumps(plan, ensure_ascii=False))
