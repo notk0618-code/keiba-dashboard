@@ -1,22 +1,47 @@
 <html><head><meta charset="utf-8"><meta name="robots" content="noindex, nofollow">
 <meta name="viewport" content="width=device-width, initial-scale=1"><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="icon" type="image/png" sizes="192x192" href="icon-192.png"><link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png"><link rel="manifest" href="manifest.json"><meta name="theme-color" content="#ff6600">
+<title>コース別AFランキング</title>
 <style>
-  body { font-family: sans-serif; background:#f5f5f5; margin:0; padding:12px; max-width:520px; margin-left:auto; margin-right:auto; box-sizing:border-box; }
-  .period-row { display:flex; gap:8px; margin-bottom:16px; }
-  .period-btn { flex:1; padding:8px; border:2px solid #111; background:#fff; color:#111; border-radius:6px; font-size:13px; font-weight:bold; }
-  .period-btn.active { background:#111; color:#fff; }
-  .venue-header { background:#111; color:#fff; padding:8px 12px; border-radius:6px 6px 0 0; font-weight:bold; font-size:14px; margin-top:14px; }
-  .badge-row { display:flex; flex-wrap:wrap; gap:6px; padding:10px; background:#fff; border:1px solid #ddd; border-top:none; border-radius:0 0 6px 6px; }
-  .badge { padding:6px 10px; border-radius:6px; font-size:12px; border:none; color:#333; }
-  .badge.turf { background:#e8f5e9; color:#4a7a4f; }
-  .badge.dirt { background:#f5ebe0; color:#8a6d4d; }
-  .badge:disabled { background:#ccc; color:#888; }
-  #rankingResult { margin-top:20px; }
-  .rank-row { background:#fff; border:1px solid #ddd; border-radius:6px; padding:8px 10px; margin-bottom:6px; font-size:13px; display:flex; justify-content:space-between; }
-  .rank-row a { color:#0645AD; text-decoration:none; font-weight:bold; }
+  :root { --bg:#f5f5f5; --panel:#fff; --fg:#1d2420; --muted:#6b736e; --line:#e2e5e2;
+          --turf:#3f7a4f; --turf-soft:#e8f2ea; --dirt:#8a6d4d; --dirt-soft:#f5ece2; --accent:#ff6600;
+          --g1:#7a2e8f; --g2:#b2412e; --g3:#2a5fa8; --op:#4e6b5c; }
+  body { font-family: "Hiragino Sans","Noto Sans JP",sans-serif; background:var(--bg); color:var(--fg); margin:0; padding:12px; max-width:520px; margin-left:auto; margin-right:auto; box-sizing:border-box; }
+  h2 { font-size:17px; margin:16px 0 4px; }
+  .note { font-size:12px; color:var(--muted); margin:0 0 10px; }
+  .panel { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:12px; margin-bottom:12px; }
+  .seg { display:flex; gap:0; border:1.5px solid #111; border-radius:8px; overflow:hidden; margin-bottom:10px; }
+  .seg button { flex:1; padding:8px 4px; border:none; background:#fff; color:#111; font-size:13px; font-weight:bold; cursor:pointer; }
+  .seg button + button { border-left:1.5px solid #111; }
+  .seg button.on { background:#111; color:#fff; }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
+  .chip { font:inherit; font-size:13px; border:1px solid #cfd5d0; background:#fff; color:var(--fg); border-radius:999px; padding:5px 13px; cursor:pointer; }
+  .chip.on { background:var(--surf); border-color:var(--surf); color:#fff; font-weight:bold; }
+  .chip:disabled { color:#bbb; border-color:#e5e5e5; cursor:default; }
+  .chip:focus-visible, .seg button:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+  .ctitle { font-size:16px; font-weight:bold; margin:0 0 2px; }
+  .sub { font-size:12px; color:var(--muted); }
+  .stack { display:flex; height:14px; border-radius:4px; overflow:hidden; margin:8px 0 4px; background:#eee; }
+  .stack span { display:block; height:100%; }
+  .legend { display:flex; flex-wrap:wrap; gap:4px 10px; font-size:11px; color:var(--muted); }
+  .legend i { display:inline-block; width:9px; height:9px; border-radius:2px; margin-right:3px; vertical-align:-1px; }
+  .kv { display:flex; gap:14px; flex-wrap:wrap; font-size:12px; margin-top:8px; }
+  .kv b { font-variant-numeric:tabular-nums; }
+  .row { display:grid; grid-template-columns:30px 1fr auto; gap:2px 8px; align-items:center; padding:9px 2px; border-bottom:1px solid var(--line); }
+  .row:last-child { border-bottom:none; }
+  .rk { font-size:15px; font-weight:bold; text-align:right; font-variant-numeric:tabular-nums; color:#333; }
+  .rk.top { color:var(--accent); }
+  .nm { min-width:0; }
+  .nm a.h { color:#0645AD; text-decoration:none; font-weight:bold; font-size:14px; }
+  .meta { font-size:11px; color:var(--muted); margin-top:2px; overflow-wrap:anywhere; }
+  .meta a { color:#0645AD; text-decoration:none; }
+  .af { text-align:right; font-size:14px; font-weight:bold; font-variant-numeric:tabular-nums; }
+  .bar { grid-column:2 / 4; height:5px; background:#eef0ee; border-radius:3px; overflow:hidden; }
+  .bar span { display:block; height:100%; background:var(--surf); border-radius:3px; }
+  .cls { display:inline-block; min-width:2.6em; text-align:center; font-size:10px; font-weight:bold; border:1px solid currentColor; border-radius:3px; padding:0 3px; margin-right:4px; color:#888; }
+  .c-G1{color:var(--g1)} .c-G2{color:var(--g2)} .c-G3{color:var(--g3)} .c-L,.c-OP{color:var(--op)}
+  .tag { display:inline-block; font-size:10px; background:#f0f1f0; color:#555; border-radius:3px; padding:0 4px; margin-left:3px; }
+  .tag.wet { background:#e3ecf7; color:#2a5fa8; }
   .loading { color:#888; font-size:14px; padding:20px 0; text-align:center; }
-  h2 { font-size:16px; margin:16px 0 8px; }
-  h3 { font-size:15px; margin:0 0 10px; }
 </style>
 </head><body><div id="top" style="background:#000; margin:-12px -12px 0 -12px; padding:14px 16px; border-bottom:3px solid #ff6600; display:flex; justify-content:space-between; align-items:center; font-family:sans-serif;">
 <a href="index.html" style="color:#fff; font-weight:bold; font-size:17px; letter-spacing:0.5px; text-decoration:none;">AF<span style="color:#ff6600;">Keiba</span>DATA</a>
@@ -48,186 +73,110 @@
   }).catch(() => {});
 })();
 </script>
-<h2 id="venue-ranking">🏆 会場別AFランキング</h2>
-<a href="#total-ranking" style="font-size:12px; color:#0645AD;">▼ 総合力ランキングへ移動</a>
-<div class="period-row">
-  <button class="period-btn active" id="btn-all" onclick="changePeriod('all')">全期間</button>
-  <button class="period-btn" id="btn-3y" onclick="changePeriod('3y')">直近3年</button>
-  <button class="period-btn" id="btn-1y" onclick="changePeriod('1y')">直近1年</button>
-</div>
-<div id="grid"><div class="loading">読み込み中…</div></div>
-<div id="rankingResult"></div>
+<h2>🏆 コース別AFランキング</h2>
+<p class="note">各コースのAF上位30走です。AFはマイナスほど速い評価です。</p>
 
-<h2 id="total-ranking" style="margin-top:28px;">💯 総合力ランキングTop100</h2>
-<a href="#venue-ranking" style="font-size:12px; color:#0645AD;">▲ 会場別ランキングへ戻る</a>
-<p style="font-size:12px; color:#666; margin-top:4px;">走破スタイル・レーダーチャート(5項目合計・ベスト距離帯基準)の全馬順位です。会場・距離を問わず、距離を横断した総合力の高さを示します。</p>
-<div class="period-row" id="surfaceTabRow">
-  <button class="period-btn active" data-surface="turf" onclick="changeSurfaceTab('turf')">芝</button>
-  <button class="period-btn" data-surface="dirt" onclick="changeSurfaceTab('dirt')">ダート</button>
+<div class="seg" id="periodSeg" role="group" aria-label="期間">
+  <button type="button" data-p="all" class="on">全期間</button>
+  <button type="button" data-p="3y">直近3年</button>
+  <button type="button" data-p="1y">直近1年</button>
 </div>
-<div class="period-row" id="bucketTabRow">
-  <button class="period-btn active" data-bucket="all" onclick="changeBucketTab('all')">全体</button>
+<div class="seg" id="surfSeg" role="group" aria-label="芝・ダート">
+  <button type="button" data-s="芝" class="on">芝</button>
+  <button type="button" data-s="ダート">ダート</button>
 </div>
-<div id="totalRankingResult"><div class="loading">読み込み中…</div></div>
+<div class="chips" id="venueChips" role="group" aria-label="会場"></div>
+<div class="chips" id="distChips" role="group" aria-label="距離"></div>
+
+<div class="panel" id="summary"><div class="loading">読み込み中…</div></div>
+<div class="panel" id="list"></div>
 
 <script>
-let rankingData = null;
-let cellIndex = {};
-let currentPeriod = 'all';
-let totalTop100Data = null;
-let bucketRankingData = null;
-let totalTop100DataDirt = null;
-let bucketRankingDataDirt = null;
-let currentBucketTab = 'all';
-let currentSurfaceTab = 'turf';
+let R = null, idx = {};
+let st = { p:'all', s:'芝', v:null, d:null };
+try { const sv = JSON.parse(localStorage.getItem('rankSel') || 'null'); if (sv) st = Object.assign(st, sv); } catch (e) {}
+const VORDER = ['札幌','函館','福島','新潟','東京','中山','中京','京都','阪神','小倉'];
+const CLS = ['G1','G2','G3','L','OP','3勝','2勝','1勝','未勝利','新馬'];
+const CCOL = {'G1':'#7a2e8f','G2':'#b2412e','G3':'#2a5fa8','L':'#4e6b5c','OP':'#7d9a8a','3勝':'#a3a8a4','2勝':'#bcc0bd','1勝':'#d2d5d3','未勝利':'#e2e4e2','新馬':'#ececec'};
+const esc = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 fetch('af_ranking.json').then(r => r.json()).then(data => {
-  rankingData = data;
-  const allKeys = new Set();
-  Object.values(data).forEach(periodObj => Object.keys(periodObj).forEach(k => allKeys.add(k)));
-  allKeys.forEach(k => {
-    const parts = k.split('_');
-    const distance = parts.pop();
-    const surface = parts.pop();
-    const venue = parts.join('_');
-    if (!cellIndex[venue]) cellIndex[venue] = [];
-    cellIndex[venue].push({surface: surface, distance: parseInt(distance), key: k});
-  });
-  // 2026/7/23確定(成果153、TAISUKE提案): 芝を先頭・ダートを後、距離は短い順に
-  // 明示的に並べる(以前は文字コード比較により、意図せずダートが先頭に来ていた)
-  const surfaceOrder = { '芝': 0, 'ダート': 1 };
-  Object.keys(cellIndex).forEach(v => cellIndex[v].sort((a,b) => (surfaceOrder[a.surface] - surfaceOrder[b.surface]) || a.distance - b.distance));
-  renderGrid();
+  R = data;
+  Object.values(data).forEach(po => Object.keys(po).forEach(k => {
+    const parts = k.split('_'); const dist = parseInt(parts.pop()); const surf = parts.pop(); const venue = parts.join('_');
+    idx[surf] = idx[surf] || {}; idx[surf][venue] = idx[surf][venue] || new Set(); idx[surf][venue].add(dist);
+  }));
+  render();
 });
 
-function renderTotalRankingList(entries, showBucket) {
-  let html = '';
-  entries.forEach(e => {
-    const bucketLine = showBucket ? ('得意: ' + e.bestBucket) : '';
-    html += '<div class="rank-row" style="flex-direction:column; align-items:flex-start;">' +
-            '<div style="display:flex; justify-content:space-between; width:100%;"><span>' + e.rank + '位 <a href="horse.html?name=' + encodeURIComponent(e.name) + '">' + e.name + '</a></span><span>総合力 ' + e.total + '</span></div>' +
-            (bucketLine ? '<div style="font-size:11px; color:#888; margin-top:2px;">' + bucketLine + '</div>' : '') +
-            '</div>';
-  });
-  document.getElementById('totalRankingResult').innerHTML = html || '<div class="loading">データがまだありません</div>';
+function venues() { const vs = Object.keys(idx[st.s] || {}); return vs.sort((a,b) => (VORDER.indexOf(a)+99*(VORDER.indexOf(a)<0)) - (VORDER.indexOf(b)+99*(VORDER.indexOf(b)<0))); }
+function dists() { return [...((idx[st.s] || {})[st.v] || [])].sort((a,b) => a-b); }
+function key() { return st.v + '_' + st.s + '_' + st.d; }
+function entries() { return ((R[st.p] || {})[key()]) || []; }
+function save() { try { localStorage.setItem('rankSel', JSON.stringify(st)); } catch (e) {} }
+
+function render() {
+  if (!R) return;
+  document.body.style.setProperty('--surf', st.s === '芝' ? 'var(--turf)' : 'var(--dirt)');
+  document.querySelectorAll('#periodSeg button').forEach(b => b.classList.toggle('on', b.dataset.p === st.p));
+  document.querySelectorAll('#surfSeg button').forEach(b => b.classList.toggle('on', b.dataset.s === st.s));
+  const vs = venues(); if (!vs.includes(st.v)) st.v = vs.includes('東京') ? '東京' : vs[0];
+  const ds = dists(); if (!ds.includes(st.d)) st.d = ds[0];
+  const vc = document.getElementById('venueChips'); vc.innerHTML = '';
+  vs.forEach(v => { const b = document.createElement('button'); b.type='button'; b.className = 'chip' + (v === st.v ? ' on' : ''); b.textContent = v; b.onclick = () => { st.v = v; render(); }; vc.appendChild(b); });
+  const dc = document.getElementById('distChips'); dc.innerHTML = '';
+  ds.forEach(d => { const b = document.createElement('button'); b.type='button'; b.className = 'chip' + (d === st.d ? ' on' : ''); b.textContent = d + 'm';
+    const has = ((R[st.p] || {})[st.v + '_' + st.s + '_' + d] || []).length > 0; b.disabled = !has;
+    b.onclick = () => { st.d = d; render(); }; dc.appendChild(b); });
+  save(); renderSummary(); renderList();
 }
 
-// 2026/7/23確定(成果117、TAISUKE提案): 芝・ダート切り替えタブを新設
-function changeSurfaceTab(surfaceKey) {
-  currentSurfaceTab = surfaceKey;
-  document.querySelectorAll('#surfaceTabRow .period-btn').forEach(b => b.classList.remove('active'));
-  document.querySelector('#surfaceTabRow [data-surface="' + surfaceKey + '"]').classList.add('active');
-  rebuildBucketTabs();
-  changeBucketTab('all');
+function renderSummary() {
+  const es = entries(); const el = document.getElementById('summary');
+  const pl = {all:'全期間', '3y':'直近3年', '1y':'直近1年'}[st.p];
+  if (!es.length) { el.innerHTML = '<div class="ctitle">' + esc(st.v) + esc(st.s) + st.d + 'm</div><div class="sub">' + pl + 'のデータがありません</div>'; return; }
+  const cnt = {}; es.forEach(e => { const c = e[11] || '不明'; cnt[c] = (cnt[c] || 0) + 1; });
+  let bar = '', leg = '';
+  CLS.concat(['不明']).forEach(c => { if (!cnt[c]) return; const w = cnt[c] / es.length * 100;
+    bar += '<span style="width:' + w + '%;background:' + (CCOL[c] || '#ddd') + '" title="' + c + ' ' + cnt[c] + '走"></span>';
+    leg += '<span><i style="background:' + (CCOL[c] || '#ddd') + '"></i>' + c + ' ' + cnt[c] + '</span>'; });
+  const tk = {}; es.forEach(e => { const t = e[8] || '-'; tk[t] = (tk[t] || 0) + 1; });
+  const tkStr = ['良','稍','重','不'].filter(t => tk[t]).map(t => t + ' ' + tk[t]).join(' / ');
+  const wins = es.filter(e => String(e[7]) === '1').length;
+  el.innerHTML = '<div class="ctitle">' + esc(st.v) + esc(st.s) + st.d + 'm</div>' +
+    '<div class="sub">' + pl + '・上位' + es.length + '走のクラス構成</div>' +
+    '<div class="stack">' + bar + '</div><div class="legend">' + leg + '</div>' +
+    '<div class="kv"><span>1位 AF <b>' + es[0][1].toFixed(2) + '</b></span><span>' + es.length + '位 AF <b>' + es[es.length-1][1].toFixed(2) + '</b></span>' +
+    '<span>勝ち馬 <b>' + wins + '</b>走</span><span>馬場 ' + (tkStr || '-') + '</span></div>';
 }
 
-function rebuildBucketTabs() {
-  const tabRow = document.getElementById('bucketTabRow');
-  tabRow.innerHTML = '<button class="period-btn active" data-bucket="all" onclick="changeBucketTab(\'all\')">全体</button>';
-  const bucketData = currentSurfaceTab === 'dirt' ? bucketRankingDataDirt : bucketRankingData;
-  if (!bucketData) return;
-  Object.keys(bucketData).forEach(bucketKey => {
-    const btn = document.createElement('button');
-    btn.className = 'period-btn';
-    btn.dataset.bucket = bucketKey;
-    btn.textContent = bucketKey;
-    btn.onclick = function() { changeBucketTab(bucketKey); };
-    tabRow.appendChild(btn);
-  });
-}
-
-function changeBucketTab(bucketKey) {
-  currentBucketTab = bucketKey;
-  document.querySelectorAll('#bucketTabRow .period-btn').forEach(b => b.classList.remove('active'));
-  const targetBtn = document.querySelector('#bucketTabRow [data-bucket="' + CSS.escape(bucketKey) + '"]');
-  if (targetBtn) targetBtn.classList.add('active');
-  const totalData = currentSurfaceTab === 'dirt' ? totalTop100DataDirt : totalTop100Data;
-  const bucketData = currentSurfaceTab === 'dirt' ? bucketRankingDataDirt : bucketRankingData;
-  if (bucketKey === 'all') {
-    renderTotalRankingList(totalData || [], true);
-  } else {
-    renderTotalRankingList((bucketData && bucketData[bucketKey]) || [], false);
-  }
-}
-
-fetch('total_ranking_top100.json').then(r => r.json()).then(data => {
-  totalTop100Data = data;
-  if (currentSurfaceTab === 'turf' && currentBucketTab === 'all') renderTotalRankingList(data, true);
-}).catch(() => {
-  document.getElementById('totalRankingResult').innerHTML = '<div class="loading">データがまだありません</div>';
-});
-
-fetch('bucket_total_ranking.json').then(r => r.json()).then(data => {
-  bucketRankingData = data;
-  if (currentSurfaceTab === 'turf') rebuildBucketTabs();
-}).catch(() => {});
-
-fetch('total_ranking_top100_dirt.json').then(r => r.json()).then(data => {
-  totalTop100DataDirt = data;
-}).catch(() => {});
-
-fetch('bucket_total_ranking_dirt.json').then(r => r.json()).then(data => {
-  bucketRankingDataDirt = data;
-}).catch(() => {});
-
-
-function renderGrid() {
-  let html = '';
-  Object.keys(cellIndex).sort().forEach(venue => {
-    html += '<div class="venue-header">' + venue + '</div>';
-    // 2026/7/23確定(成果160、TAISUKE提案): 「(芝)」「(ダート)」の表記が、
-    // ボタンごとに何度も繰り返され、見づらいとの指摘を受け、芝・ダートで
-    // グループ化し、見出しを1回だけ表示する形式に整理した
-    ['芝', 'ダート'].forEach(surfaceGroup => {
-      const items = cellIndex[venue].filter(c => c.surface === surfaceGroup);
-      if (items.length === 0) return;
-      html += '<div style="font-size:11px; color:#999; margin:4px 0 2px 2px;">' + surfaceGroup + '</div><div class="badge-row">';
-      items.forEach(c => {
-        const hasData = rankingData[currentPeriod] && rankingData[currentPeriod][c.key] && rankingData[currentPeriod][c.key].length > 0;
-        const label = c.distance + 'm';
-        const cls = 'badge ' + (c.surface === '芝' ? 'turf' : 'dirt');
-        if (hasData) {
-          html += '<button class="' + cls + '" onclick="showRanking(\'' + c.key + '\')">' + label + '</button>';
-        } else {
-          html += '<button class="' + cls + '" disabled>' + label + '</button>';
-        }
-      });
-      html += '</div>';
-    });
-  });
-  document.getElementById('grid').innerHTML = html;
-}
-
-function showRanking(key) {
-  const entries = rankingData[currentPeriod][key];
-  const parts = key.split('_');
-  const distance = parts.pop();
-  const surface = parts.pop();
-  const venue = parts.join('_');
-  let html = '<h3>' + venue + ' ' + distance + 'm(' + surface + ') AFランキング</h3>';
-  entries.forEach((e, i) => {
+function renderList() {
+  const es = entries(); const el = document.getElementById('list');
+  if (!es.length) { el.innerHTML = ''; return; }
+  const best = es[0][1], worst = es[es.length-1][1], span = Math.max(worst - best, 0.01);
+  let h = '';
+  es.forEach((e, i) => {
     const name = e[0], af = e[1], date = e[2], raceName = e[3], dashLink = e[4], archiveLink = e[5], rNum = e[6];
-    let raceNameDisplay = raceName || '-';
-    if (archiveLink) {
-      raceNameDisplay = '<a href="race.html?key=' + archiveLink + '">' + raceNameDisplay + '</a>';
-    } else if (dashLink && rNum) {
-      raceNameDisplay = '<a href="dashboard_' + dashLink + '.html#' + venue + '_' + rNum + '">' + raceNameDisplay + '</a>';
-    }
-    html += '<div class="rank-row" style="flex-direction:column; align-items:flex-start;">' +
-            '<div style="display:flex; justify-content:space-between; width:100%;"><span>' + (i+1) + '位 <a href="horse.html?name=' + encodeURIComponent(name) + '">' + name + '</a></span><span>AF ' + af.toFixed(2) + '%</span></div>' +
-            '<div style="font-size:11px; color:#888; margin-top:2px;">' + date + ' ' + raceNameDisplay + '</div>' +
-            '</div>';
+    const fin = e[7], track = e[8], pace = e[9], style = e[10], cls = e[11];
+    let race = esc(raceName || '-');
+    if (archiveLink) race = '<a href="race.html?key=' + encodeURIComponent(archiveLink) + '">' + race + '</a>';
+    else if (dashLink && rNum) race = '<a href="dashboard_' + dashLink + '.html#' + encodeURIComponent(st.v) + '_' + rNum + '">' + race + '</a>';
+    const w = 20 + 80 * (worst - af) / span;
+    const finTxt = (fin && fin !== '0') ? fin + '着' : '';
+    const tags = (finTxt ? '<span class="tag">' + finTxt + '</span>' : '') +
+                 (track ? '<span class="tag' + (track !== '良' ? ' wet' : '') + '">' + esc(track) + '</span>' : '') +
+                 (pace ? '<span class="tag">' + esc(pace) + '</span>' : '') +
+                 (style ? '<span class="tag">' + esc(style) + '</span>' : '');
+    h += '<div class="row"><div class="rk' + (i < 3 ? ' top' : '') + '">' + (i+1) + '</div>' +
+         '<div class="nm"><a class="h" href="horse.html?name=' + encodeURIComponent(name) + '">' + esc(name) + '</a>' +
+         '<div class="meta">' + (cls ? '<span class="cls c-' + esc(cls) + '">' + esc(cls) + '</span>' : '') + esc(date) + ' ' + race + tags + '</div></div>' +
+         '<div class="af">' + af.toFixed(2) + '</div>' +
+         '<div class="bar"><span style="width:' + w.toFixed(1) + '%"></span></div></div>';
   });
-  document.getElementById('rankingResult').innerHTML = html;
-  document.getElementById('rankingResult').scrollIntoView({behavior:'smooth'});
+  el.innerHTML = h;
 }
 
-function changePeriod(p) {
-  currentPeriod = p;
-  document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('btn-' + p).classList.add('active');
-  renderGrid();
-  document.getElementById('rankingResult').innerHTML = '';
-}
+document.querySelectorAll('#periodSeg button').forEach(b => b.onclick = () => { st.p = b.dataset.p; render(); });
+document.querySelectorAll('#surfSeg button').forEach(b => b.onclick = () => { st.s = b.dataset.s; render(); });
 </script>
 </body></html>
