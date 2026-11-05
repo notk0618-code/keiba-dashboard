@@ -119,7 +119,7 @@ def parse_race(page, cname):
         cell = {k: v for k, v in re.findall(r'<td class="(\w+)">(.*?)</td>', row, re.S)}
         if 'horse' not in cell: continue
         hid = re.search(r'pw01dud\d\d(\d{10})/', cell['horse'])
-        jk = re.search(r"pw04kmk00(\d{4,5})/", cell.get('jockey', ''))
+        jk = re.search(r"pw04k(?:mk00|rc01)(\d{4,5})/", cell.get('jockey', ''))
         tr = re.search(r"pw05cmk00(\d{4,5})/", cell.get('trainer', ''))
         corners = {int(n): int(v) for n, v in re.findall(r'title="(\d)コーナー通過順位">\s*(\d+)\s*<', cell.get('corner', ''))}
         hw = re.match(r'\s*(\d+)', _t(cell.get('h_weight', '')))
@@ -449,6 +449,113 @@ def write_tokubetsu(out, d0, rows):
     with open(path, 'w', encoding='cp932', errors='replace', newline='') as f:
         w = csv.writer(f, lineterminator='\r\n'); w.writerow(TK_HEADER); w.writerows(rows)
     return path
+
+# ---------------------------------------------------------------- 出馬表 → 当日出走馬 (TARGET's v02 layout)
+DE_TOP = 'pw01dli00/F3'
+TD_HEADER = ['場 R', 'レース名', '芝ダ', '距離', '発走時刻', '馬番', '馬名S', 'Ｃ', '馬印1', '馬印2', '馬印3', '性', '齢', '騎手', '斤量',
+             'マイニング値', 'マイニング順位', '単オッズ', '人気', '複勝オッズ下', '上', '着', '所属', '調教師', '馬体重', '増減', '種牡馬',
+             '父タイプ名', '母父名', '母父タイプ名', '母母父名', '母母父タイプ名']
+VENUE_PREFIX = {'札幌': '札', '函館': '函', '福島': '福', '新潟': '新', '東京': '東', '中山': '中', '中京': '名', '京都': '京',
+                '阪神': '阪', '小倉': '小'}
+DIVISION = {'美浦': '(美)', '栗東': '(栗)', '地方': '[地]', '外国': '[外]'}
+
+def get_d(cname): return _req('POST', f'{BASE}/JRADB/accessD.html', data={'cname': cname})
+
+def shutsuba_codes():
+    """{date: [meeting cname]} of the race days JRA's 出馬表 lists (Thursday evening on: the coming weekend)."""
+    out = {}
+    for c in sorted(set(re.findall(r"(pw01drl00\d{18}/[0-9A-F]{2})", get_d(DE_TOP)))):
+        out.setdefault(c[-11:-3], []).append(c)
+    return out
+
+def shutsuba_race_codes(list_cname):
+    return sorted(set(re.findall(r"(pw01dde\d{22}/[0-9A-F]{2})", get_d(list_cname))), key=lambda c: int(c[19:21]))
+
+def parse_shutsuba(page, cname):
+    """Race header (as on the result page) plus the runners of one 出馬表 page. 枠・馬番 are 0 until the draw (Friday)."""
+    race = parse_race(page, 'pw01sde10' + cname[9:])
+    pt = re.search(r'発走時刻：<strong>(\d+)時(\d+)分', page)
+    race['post'] = f'{int(pt.group(1)):02d}:{pt.group(2)}' if pt else ''
+    body = page[page.find('<tbody', page.find('<thead')):]
+    body = body[:body.find('</tbody>')]
+    hs = []
+    for row in re.findall(r'<tr>(.*?)</tr>', body, re.S):
+        cell = {k: v for k, v in re.findall(r'<td class="(\w+)">(.*?)</td>', row, re.S)}
+        if 'horse' not in cell or 'jockey' not in cell: continue
+        hc, jc = cell['horse'], cell['jockey']
+        f = lambda pat, s: _t((re.search(pat, s, re.S) or [None, ''])[1])
+        hid = re.search(r'pw01dud\d\d(\d{10})/', hc)
+        tr = re.search(r'class="trainer">(.*?)<span class="division">[（(](.*?)[）)]', hc, re.S)
+        sa = re.match(r'([牡牝セせ騸])(\d+)', f(r'class="age">(.*?)</p>', jc).replace('せん', 'セ').replace('せ', 'セ').replace('騸', 'セ'))
+        jk = re.search(r"pw04k(?:mk00|rc01)(\d{4,5})/", jc)
+        tc = re.search(r"pw05cmk00(\d{4,5})/", hc)
+        num = _t(cell.get('num', ''))
+        hs.append({'name': f(r'class="name">(.*?)</div>', hc), 'id': hid.group(1) if hid else '',
+                   'waku': int((re.search(r'枠(\d)', cell.get('waku', '')) or [0, 0])[1]), 'num': int(num) if num.isdigit() else 0,
+                   'trainer': _t(tr.group(1)) if tr else '', 'division': _t(tr.group(2)) if tr else '',
+                   'trainer_code': tc.group(1).zfill(5) if tc else '',
+                   'sire': f(r'class="sire"><span>父：</span>(.*?)</li>', hc), 'damsire': f(r'母の父：(.*?)[)）]', hc),
+                   'sex': sa.group(1) if sa else '', 'age': sa.group(2) if sa else '',
+                   'weight': _num(f(r'class="weight">(.*?)<span', jc)), 'mark': f(r'class="mark jockey">(.*?)</span>', jc),
+                   'jockey': f(r'class="jockey">(?:<span[^>]*>.*?</span>)?(.*?)</p>', jc), 'jockey_code': jk.group(1).zfill(5) if jk else ''})
+    race['horses'] = hs
+    return race
+
+def _kin(w, mark):
+    """斤量 as TARGET writes it: ' 55 ', '57.5', '53▲'."""
+    if w is None: return ''
+    s = str(int(w)) if w == int(w) else f'{w:g}'
+    return s + mark if mark else (f' {s} ' if w == int(w) else s)
+
+def jockey_name(h, names):
+    code = h['jockey_code'] or names.jn.get(_nospace(h['jockey']), '')
+    if code in names.j: return names.j[code]
+    return re.sub(r'^[A-Za-zＡ-Ｚ][.．]', '', _nospace(h['jockey']))[:4]  # TARGET: 4 characters ('A.プーシャン' → 'プーシャ')
+
+def shutsuba_rows(race, names):
+    venue = {v: k for k, v in VENUE_CODE.items()}[race['venue_code']]
+    hurdle = _hurdle(race)
+    dirt = 'ダート' in race['course'] and not ('芝' in race['course'] and not hurdle)
+    sn = short_name(race, names)
+    rows = []
+    for h in race['horses']:
+        prof = names.h.get(h['id'], {})
+        tcode = h['trainer_code'] or names.tn.get(_nospace(h['trainer']), '')
+        tname = names.t[tcode][0] if tcode in names.t else _nospace(h['trainer'])
+        rows.append([f"{VENUE_PREFIX[venue]}{race['R']}", sn, 'ダ' if dirt else '芝', str(race['dist']), race['post'],
+                     str(h['num']) if h['num'] else '未', h['name'], '', '', '', '', h['sex'], h['age'], jockey_name(h, names),
+                     _kin(h['weight'], h['mark']), '', '', '', '', '', '', '', DIVISION.get(h['division'], ''), tname, '', '',
+                     prof.get('sire') or h['sire'], '', prof.get('damsire') or h['damsire'], '', '', ''])
+    return rows
+
+def collect_shutsuba(date, db=None, log=print):
+    """Rows in TARGET's 当日出走馬 layout for one race day, from JRA's 出馬表 (None if JRA does not list the day)."""
+    codes = shutsuba_codes().get(date)
+    if not codes: return None
+    names = Names(db, date)
+    rows = []
+    for lc in codes:
+        for code in shutsuba_race_codes(lc):
+            race = parse_shutsuba(get_d(code), code)
+            rows += shutsuba_rows(race, names)
+        log(f'[shutsuba] {date} {lc[9:11]}: {len(rows)} horses so far')
+    return rows
+
+def drawn(date):
+    """True when JRA's 出馬表 for the day already shows 馬番 (checked on the day's first race)."""
+    codes = shutsuba_codes().get(date)
+    if not codes: return False
+    rc = shutsuba_race_codes(codes[0])
+    return bool(rc) and any(h['num'] for h in parse_shutsuba(get_d(rc[0]), rc[0])['horses'])
+
+def write_toujitsu(out, date, rows):
+    import csv
+    os.makedirs(out, exist_ok=True)
+    path = os.path.join(out, f'当日出走馬{date}_JRA.csv')
+    with open(path, 'w', encoding='cp932', errors='replace', newline='') as f:
+        w = csv.writer(f, lineterminator='\r\n'); w.writerow(TD_HEADER); w.writerows(rows)
+    return path
+
 
 def write(out, start, R, H, P):
     import csv

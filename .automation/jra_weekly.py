@@ -12,6 +12,10 @@
 4. 特別登録: when JRA lists next weekend's special-race nominations and Drive has neither 特別登録YYYYMMDD*.csv nor
    当日出走馬YYYYMMDD*.csv for it, 特別登録YYYYMMDD_JRA.csv (TARGET's 33 columns) is built and uploaded; the hourly
    plan then runs 7-2 (暫定予想・カレンダー) on it as with TARGET's file.
+5. 当日出走馬: for each race day JRA's 出馬表 lists (from Thursday evening), when Drive has no 当日出走馬YYYYMMDD*.csv,
+   当日出走馬YYYYMMDD_JRA.csv (TARGET's v02 layout, 馬番 '未') is built and uploaded; the plan then runs 1. (予想・公開).
+   Once JRA shows 馬番 (the Friday draw), our file is rebuilt in place (馬番, 騎手変更), which makes the plan predict again.
+   A TARGET 当日出走馬 for the day (any other file name) always wins: nothing is built or updated then.
 Prints lines starting with [jra-weekly]."""
 import sys, os, re, io, csv, json, tempfile, argparse, datetime as dt
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -35,6 +39,11 @@ def upload(s, path, name, mime='text/csv'):
     from googleapiclient.http import MediaFileUpload
     m = MediaFileUpload(path, mimetype=mime, resumable=True)
     req = s.files().create(body={'name': name, 'parents': [gdrive.FOLDER]}, media_body=m, supportsAllDrives=True); r = None
+    while r is None: _, r = req.next_chunk(num_retries=5)
+
+def update(s, fid, path, mime='text/csv'):
+    from googleapiclient.http import MediaFileUpload
+    req = s.files().update(fileId=fid, media_body=MediaFileUpload(path, mimetype=mime, resumable=True), supportsAllDrives=True); r = None
     while r is None: _, r = req.next_chunk(num_retries=5)
 
 def compare(target_race, target_horse, jra_race, jra_horse):
@@ -139,10 +148,42 @@ def tokubetsu_step(s, by, today, dry):
     upload(s, path, os.path.basename(path))
     print(f'[jra-weekly] uploaded {os.path.basename(path)} ({len(rows)} horses, {", ".join(dates)})')
 
+def shutsuba_step(s, by, today, dry):
+    """当日出走馬YYYYMMDD_JRA.csv from JRA's 出馬表 for each listed race day (see module doc, 5.)."""
+    import jra_results as jr
+    days = sorted(d for d in jr.shutsuba_codes() if d >= today)
+    if not days: print('[jra-weekly] 当日出走馬: JRAの出馬表に今後の開催なし'); return
+    db_dir = None
+    for d in days:
+        mine = f'当日出走馬{d}_JRA.csv'
+        others = [n for n in by if n.startswith(f'当日出走馬{d}') and n.endswith('.csv') and n != mine
+                  and not re.search(r'_変換済み|_特別登録_分割|_utf8', n)]
+        if others: print(f'[jra-weekly] 当日出走馬{d}: TARGET file on Drive ({others[0]}); JRA build skipped'); continue
+        if mine in by:
+            if d == today: print(f'[jra-weekly] {mine}: race day, kept (odds runs fill 馬番・オッズ)'); continue
+            tmp = tempfile.mkdtemp(); gdrive.download(s, by[mine]['id'], os.path.join(tmp, mine))
+            import pandas as pd
+            have = pd.read_csv(os.path.join(tmp, mine), encoding='cp932', dtype=str)['馬番'].astype(str).str.isdigit().any()
+            if have or not jr.drawn(d): print(f'[jra-weekly] {mine}: up to date ({"馬番あり" if have else "枠順未確定"})'); continue
+        if not dry and not gdrive.can_create():
+            print('[jra-weekly] GOOGLE_OAUTH_JSON がないためDriveに作成できません'); return
+        if db_dir is None:
+            db_dir = tempfile.mkdtemp()
+            for n in ('keiba.duckdb', 'keiba.duckdb.wal'):
+                if n in by: gdrive.download(s, by[n]['id'], os.path.join(db_dir, n))
+        rows = jr.collect_shutsuba(d, os.path.join(db_dir, 'keiba.duckdb'), log=lambda m: print(m, file=sys.stderr))
+        if not rows: print(f'[jra-weekly] 当日出走馬{d}: JRAの出馬表が空'); continue
+        path = jr.write_toujitsu(tempfile.mkdtemp(), d, rows)
+        drawn = any(r[5] != '未' for r in rows)
+        if dry: print(f'[jra-weekly] {mine}: dry run, {len(rows)} horses (馬番{"あり" if drawn else "未定"}) → {path}'); continue
+        if mine in by: update(s, by[mine]['id'], path); act = 'updated'
+        else: upload(s, path, mine); act = 'uploaded'
+        print(f'[jra-weekly] {act} {mine} ({len(rows)} horses, 馬番{"あり" if drawn else "未定"})')
+
 if __name__ == '__main__':
     ap = argparse.ArgumentParser(); ap.add_argument('--dry-run', action='store_true'); a = ap.parse_args()
     today = dt.datetime.now(JST).strftime('%Y%m%d')
     s = gdrive.svc(); by = {f['name']: f for f in gdrive.list_folder(s)}
-    for step in (results_step, tokubetsu_step):
+    for step in (results_step, tokubetsu_step, shutsuba_step):
         try: step(s, by, today, a.dry_run)
         except Exception as e: print(f'[jra-weekly] {step.__name__} failed: {e!r}')

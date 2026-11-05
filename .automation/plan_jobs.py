@@ -4,7 +4,7 @@
 - tokubetsu: newest 特別登録*.csv whose race dates are still ahead, have no 当日出走馬 file yet, and are newer than
   their 当日出走馬YYMMDD_特別登録_分割.csv. Race dates come from the file name (8 digits, or 8+4 for two days).
 - Before planning, jra_weekly.py builds from JRA's site whatever TARGET would have uploaded and is missing
-  (成績フルセット for the last weekend, 特別登録 for the next); skipped with JRA_BUILD=0.
+  (成績フルセット for the last weekend, 特別登録 and 当日出走馬 for the next); skipped with JRA_BUILD=0.
 - odds: today's 当日出走馬 again, when it is already predicted but JRA still has races to run today (post time more
   than 5 minutes away), so each run on a race day republishes with JRA's current odds."""
 import sys, os, re, json, subprocess, datetime as dt
