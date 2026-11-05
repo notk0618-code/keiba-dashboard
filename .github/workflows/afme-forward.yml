@@ -1,0 +1,60 @@
+# AF-ME forward test (research only; no production code, DB or dashboard is touched).
+# Race days: polls JRA's official win odds at T-30 / T-10 / T-5 for every flat race and records frozen model
+# predictions and bet decisions. All code, frozen coefficients and every data file live in the PRIVATE repository
+# notk0618-code/keiba-research; this public workflow only checks it out, runs it and pushes back.
+# Nothing data-bearing is printed: the poller's output goes to a log file inside the private repo, and this public
+# log shows only whether each step succeeded.
+name: afme-forward
+on:
+  schedule:
+    - cron: '40 23 * * 5,6'   # Sat/Sun 08:40 JST: morning job, runs until 14:30 JST
+    - cron: '0 5 * * 6,0'     # Sat/Sun 14:00 JST: afternoon job, waits for the morning one, runs to the last race
+  workflow_dispatch:          # holiday race days (e.g. Monday) or a manual restart; safe to repeat (taken slots are skipped)
+    inputs:
+      until:
+        description: 'stop at HH:MM JST (blank = after the last race)'
+        required: false
+        default: ''
+concurrency:
+  group: afme-forward
+  cancel-in-progress: false
+permissions:
+  contents: read
+jobs:
+  poll:
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    steps:
+      - name: Check out the private research repository
+        uses: actions/checkout@v4
+        with:
+          repository: notk0618-code/keiba-research
+          token: ${{ secrets.AFME_PRIVATE_TOKEN }}
+          path: research
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install
+        run: pip install -q -r research/requirements-poller.txt
+      - name: Poll JRA odds and record (output kept in the private repo)
+        env:
+          UNTIL_INPUT: ${{ github.event.inputs.until }}
+          EVENT: ${{ github.event_name }}
+          SCHED: ${{ github.event.schedule }}
+        run: |
+          cd research
+          git config user.name "afme-forward-bot"
+          git config user.email "afme-forward-bot@users.noreply.github.com"
+          D=$(TZ=Asia/Tokyo date +%Y%m%d)
+          UNTIL="$UNTIL_INPUT"
+          if [ "$EVENT" = "schedule" ] && [ "$SCHED" = "40 23 * * 5,6" ]; then UNTIL="14:30"; fi
+          mkdir -p "logs/$D"
+          LOG="logs/$D/poller_$(TZ=Asia/Tokyo date +%H%M).log"
+          set +e
+          python -m afme_fwd.poller . --date "$D" ${UNTIL:+--until "$UNTIL"} --sync > "$LOG" 2>&1
+          RC=$?
+          set -e
+          git add logs && git commit -q -m "afme forward $D log" || true
+          for i in 1 2 3 4; do git pull -q --rebase && git push -q && break; sleep $((2**i)); done
+          echo "poller exit code: $RC"
+          exit $RC
