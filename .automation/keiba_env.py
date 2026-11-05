@@ -38,6 +38,8 @@ def load(site):
         h = _header(*x, **k)
         return h if BETS_LINK in h else h.replace(HEADER_ANCHOR, HEADER_ANCHOR + '\n' + BETS_LINK, 1)
     ns['build_common_header'] = _header_with_bets
+    if os.environ.get('PACE_FORECAST', '1') != '0':  # race cards: model B pace forecast panel (display only, pace_forecast.py)
+        import pace_forecast; pace_forecast.install(ns)
     def _stage_bytes(github_filename, data):
         dst = os.path.join(site, github_filename); os.makedirs(os.path.dirname(dst) or site, exist_ok=True)
         with open(dst, 'wb') as f: f.write(data)
