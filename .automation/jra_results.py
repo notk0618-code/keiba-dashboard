@@ -432,7 +432,7 @@ def collect_tokubetsu(db=None, dates=None, log=print):
                     except Exception as e: hp = {}; log(f'[tokubetsu] horse page failed {h["name"]}: {e}')
                     prof = prof or hp; sex = sex or hp.get('sex', ''); tr = tr or hp.get('trainer', ''); aff = aff or hp.get('affil', '')
                 birth = str(prof.get('birth', '') or '')
-                rows.append([d[2:], venue, str(race['R']), f'{i:2d}', short_name(race, names), 'ダ' if dirt else '芝', str(race['dist']),
+                rows.append([d[2:], venue, str(race['R']), f'{i:2d}', short_name(race, names), '障' if _hurdle(race) else ('ダ' if dirt else '芝'), str(race['dist']),
                     h['name'], sex, str(int(d[:4]) - int(birth[:4])) if birth[:4].isdigit() else '', '', h['weight'], tr, aff,
                     owner_name(prof.get('owner', '')), owner_name(prof.get('breeder', '')), prof.get('sire', ''), prof.get('dam', ''),
                     f"UX{h['id'][2:]}", str(race['nichi']), prof.get('damsire', ''), COAT.get(prof.get('coat', ''), prof.get('coat', '')),
@@ -522,7 +522,7 @@ def shutsuba_rows(race, names):
         prof = names.h.get(h['id'], {})
         tcode = h['trainer_code'] or names.tn.get(_nospace(h['trainer']), '')
         tname = names.t[tcode][0] if tcode in names.t else _nospace(h['trainer'])
-        rows.append([f"{VENUE_PREFIX[venue]}{race['R']}", sn, 'ダ' if dirt else '芝', str(race['dist']), race['post'],
+        rows.append([f"{VENUE_PREFIX[venue]}{race['R']}", sn, '障' if hurdle else ('ダ' if dirt else '芝'), str(race['dist']), race['post'],
                      str(h['num']) if h['num'] else '未', h['name'], '', '', '', '', h['sex'], h['age'], jockey_name(h, names),
                      _kin(h['weight'], h['mark']), '', '', '', '', '', '', '', DIVISION.get(h['division'], ''), tname, '', '',
                      prof.get('sire') or h['sire'], '', prof.get('damsire') or h['damsire'], '', '', ''])
