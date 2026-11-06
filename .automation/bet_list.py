@@ -46,6 +46,8 @@ def candidates(log, jra):
     for (venue, R), g in log.groupby(['場所', 'R']):
         g = g[g['馬番'].notna()].copy()
         g['num'] = g['馬番'].astype(int)
+        for c in ('較正後勝率', 'total_score', 'place_prob'):  # None-only columns come back as object dtype
+            g[c] = pd.to_numeric(g[c], errors='coerce')
         j = [h.get((venue, int(R), n)) for n in g['num']]
         g['o'] = [x['odds'] if x and x.get('odds') else o for x, o in zip(j, pd.to_numeric(g['単勝オッズ'], errors='coerce'))]
         g['plo'] = [x['place'][0] if x and x.get('place') else None for x in j]
@@ -62,6 +64,8 @@ def candidates(log, jra):
             for i, r in g.iterrows():
                 rows.append(dict(場所=venue, R=int(R), 券種='複勝', 馬番=r['num'], 馬名=r['馬名'], オッズ=float(r['plo']), 推定確率=float(p_pl[i]), gap=bool(gap[i])))
     df = pd.DataFrame(rows, columns=['場所', 'R', '券種', '馬番', '馬名', 'オッズ', '推定確率', 'gap'])
+    # before JRA sells a day every odds is 0, so no race qualifies: keep the empty frame numeric so .round() works
+    df = df.astype({'R': int, '馬番': int, 'オッズ': float, '推定確率': float, 'gap': bool})
     df['期待値'] = df['推定確率'] * df['オッズ']
     ev = (df['期待値'] >= EV_MIN) & (df['オッズ'] > 1)
     df['根拠'] = np.where(ev, 'EV', '指数穴')  # a bet both rules pick counts as EV
