@@ -166,6 +166,50 @@ function buildParameterBars(ratings, customLabels) {
   return html;
 }
 
+// 2026/11/06確定(TAISUKE提案): レースカード(PAST_RUN_BADGES)と同じ、着順の金銀銅ボックスと、
+// AF ／ AF(CP)の上位率グラデーションボックスで過去走を表示する
+const PAST_RUN_BADGES_JS = true;
+const RANK_GRAD_STOPS_JS = [[0,[8,48,107]],[5,[16,80,160]],[10,[33,113,196]],[20,[82,152,220]],[35,[151,192,234]],[50,[205,223,243]],[70,[232,238,246]],[100,[244,245,247]]];
+function rankGradColorJs(p) {
+  p = Math.max(0, Math.min(100, p));
+  for (let i = 0; i < RANK_GRAD_STOPS_JS.length - 1; i++) {
+    const [p0, c0] = RANK_GRAD_STOPS_JS[i], [p1, c1] = RANK_GRAD_STOPS_JS[i + 1];
+    if (p <= p1) {
+      const t = p1 > p0 ? (p - p0) / (p1 - p0) : 0;
+      return 'rgb(' + c0.map((a, k) => Math.round(a + (c1[k] - a) * t)).join(',') + ')';
+    }
+  }
+  return '#f4f5f7';
+}
+function pastRankBoxJs(label, valueHtml, topPct) {
+  const base = 'display:inline-flex; flex-direction:column; justify-content:center; min-width:128px; padding:3px 7px; border-radius:6px; line-height:1.15; box-sizing:border-box;';
+  if (topPct === undefined || topPct === null || isNaN(topPct)) {
+    return '<span style="' + base + ' background:#f4f5f7; color:#999; border:1px solid #e3e3e3;"><span style="font-size:9px;">' + label + '</span><span style="font-size:14px; font-weight:bold;">' + valueHtml + '</span><span style="font-size:9px;">-</span></span>';
+  }
+  const bg = rankGradColorJs(topPct);
+  const dark = topPct <= 25;
+  const fg = dark ? '#ffffff' : (topPct <= 60 ? '#0b2a55' : '#6b7280');
+  const sub = dark ? 'rgba(255,255,255,0.85)' : fg;
+  const pctStr = topPct >= 0.95 ? topPct.toFixed(1) : topPct.toFixed(2);
+  return '<span title="' + label + ' 上位' + topPct.toFixed(2) + '%" style="' + base + ' background:' + bg + '; color:' + fg + '; border:1px solid ' + bg + ';">' +
+    '<span style="font-size:9px; color:' + sub + ';">' + label + '</span>' +
+    '<span style="font-size:14px; font-weight:bold;">' + valueHtml + '</span>' +
+    '<span style="font-size:9px; color:' + sub + ';">' + (topPct <= 5 ? '★' : '') + '上位' + pctStr + '%</span></span>';
+}
+function pastFinishBoxJs(finish, marginStr) {
+  const f = parseInt(finish, 10);
+  const base = 'display:inline-flex; flex-direction:column; align-items:center; justify-content:center; min-width:48px; padding:3px 6px; border-radius:6px; line-height:1.15; box-sizing:border-box;';
+  let sty, subC;
+  if (f === 1) { sty = 'background:linear-gradient(180deg,#fff1a8 0%,#f2c94c 45%,#c9971c 100%); color:#4a3500; border:1px solid #b8860b; box-shadow:0 1px 2px rgba(0,0,0,0.25);'; subC = '#5c4300'; }
+  else if (f === 2) { sty = 'background:linear-gradient(180deg,#ffffff 0%,#d9dde2 50%,#a9b0b8 100%); color:#2f3640; border:1px solid #8e969f; box-shadow:0 1px 2px rgba(0,0,0,0.2);'; subC = '#3d4550'; }
+  else if (f === 3) { sty = 'background:linear-gradient(180deg,#f6c9a0 0%,#d58b4e 50%,#a35a26 100%); color:#ffffff; border:1px solid #8a4a1c; box-shadow:0 1px 2px rgba(0,0,0,0.2);'; subC = 'rgba(255,255,255,0.9)'; }
+  else if (!isNaN(f) && f <= 5) { sty = 'background:#ffffff; color:#333; border:1px solid #b9b9b9;'; subC = '#777'; }
+  else { sty = 'background:#f4f5f7; color:#888; border:1px solid #e3e3e3;'; subC = '#999'; }
+  const finStr = isNaN(f) ? String(finish) : f + '着';
+  const sub = marginStr ? marginStr : (f === 1 ? '勝ち' : '&nbsp;');
+  return '<span style="' + base + ' ' + sty + '"><span style="font-size:15px; font-weight:bold;">' + finStr + '</span><span style="font-size:9px; color:' + subC + ';">' + sub + '</span></span>';
+}
+
 function raceRowHtml(e, horseName) {
   const [date, venue, distance, raceName, finish, weight, track, surface, af, pace, dashDate, rNum, archiveKey, horseType, afTopPct, rankBadge, af3katsu, raceStyle, finishTime, agari3f, passageOrder] = e;
   // 2026/7/23確定(成果161、TAISUKE提案): 前後半3F/4F・騎手は、サイズ超過を
@@ -259,6 +303,26 @@ function raceRowHtml(e, horseName) {
   // 行から、末尾に移動)、⑨全体基準/3勝クラス基準AF、の順に、変更した
   const courseEvalLine = (courseEvalScore !== undefined && courseEvalScore !== null)
     ? '<div style="font-size:12px; color:#555;">AF(CP)' + courseEvalScore.toFixed(1) + '点' + rankBadgeStr + '</div>' : '';
+  if (PAST_RUN_BADGES_JS) {
+    const fNum = parseInt(finish, 10);
+    let mStr = '';
+    if (margin !== undefined && margin !== null) {
+      mStr = (fNum === 1 ? '+' : '-') + Math.abs(margin).toFixed(1) + '秒';
+    }
+    const afStr = (af !== null && af !== undefined) ? af.toFixed(2) + '%' : '-';
+    const cpStr = (courseEvalScore !== undefined && courseEvalScore !== null) ? courseEvalScore.toFixed(1) : '-';
+    const rankBox = pastRankBoxJs('AF ／ AF(CP)', afStr + '<span style="font-size:11px; font-weight:normal; opacity:0.8;"> ／ </span>' + cpStr, afTopPct);
+    const accent = fNum === 1 ? '#d4a017' : (fNum === 2 ? '#a9b0b8' : (fNum === 3 ? '#b8692e' : 'transparent'));
+    const extraItems = [timeStr ? '走破' + timeStr : '', jockeyStr, babaStr, bwStr, kinStr].filter(Boolean);
+    const extraNw = extraItems.length ? '<div style="font-size:11px; color:#777; display:flex; flex-wrap:wrap; column-gap:8px;">' + extraItems.map(x => '<span style="white-space:nowrap;">' + x + '</span>').join('') + '</div>' : '';
+    return '<div class="race-row" style="border-left:4px solid ' + accent + '; padding-left:8px;">' +
+      '<div style="display:flex; justify-content:space-between; align-items:baseline; gap:6px;">' +
+        '<span style="font-size:13px; font-weight:bold;">' + date.replace(/-/g, '/') + ' ' + venue + surface + distance + 'm</span>' +
+        '<span style="font-size:12px; text-align:right;">' + raceNameDisplay + '</span></div>' +
+      '<div style="display:flex; gap:6px; align-items:center; margin:5px 0 4px;">' + pastFinishBoxJs(finish, mStr) + rankBox + rankBadgeStr + '</div>' +
+      paceTrackLine + extraNw + extraLine2 + extraLine3 + extraLine4 +
+      '</div>';
+  }
   return '<div class="race-row">' +
     '<div style="font-size:13px; font-weight:bold;">' + date.replace(/-/g, '/') + ' ' + venue + surface + distance + 'm</div>' +
     '<div style="font-size:12px; color:#555;">' + raceNameDisplay + ' ／ ' + finishDisplay + marginDisplay + '</div>' +
