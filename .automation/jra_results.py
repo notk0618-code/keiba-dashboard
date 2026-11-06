@@ -541,12 +541,13 @@ def collect_shutsuba(date, db=None, log=print):
         log(f'[shutsuba] {date} {lc[9:11]}: {len(rows)} horses so far')
     return rows
 
-def drawn(date):
-    """True when JRA's 出馬表 for the day already shows 馬番 (checked on the day's first race)."""
-    codes = shutsuba_codes().get(date)
-    if not codes: return False
-    rc = shutsuba_race_codes(codes[0])
-    return bool(rc) and any(h['num'] for h in parse_shutsuba(get_d(rc[0]), rc[0])['horses'])
+def drawn_count(date):
+    """How many runners JRA's 出馬表 for the day already shows with 馬番 (graded races are drawn a day earlier)."""
+    n = 0
+    for lc in shutsuba_codes().get(date) or []:
+        for rc in shutsuba_race_codes(lc):
+            n += sum(1 for h in parse_shutsuba(get_d(rc), rc)['horses'] if h['num'])
+    return n
 
 def write_toujitsu(out, date, rows):
     import csv
