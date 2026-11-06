@@ -432,7 +432,7 @@ def collect_tokubetsu(db=None, dates=None, log=print):
                     except Exception as e: hp = {}; log(f'[tokubetsu] horse page failed {h["name"]}: {e}')
                     prof = prof or hp; sex = sex or hp.get('sex', ''); tr = tr or hp.get('trainer', ''); aff = aff or hp.get('affil', '')
                 birth = str(prof.get('birth', '') or '')
-                rows.append([d[2:], venue, str(race['R']), f'{i:2d}', short_name(race, names), 'ダ' if dirt else '芝', str(race['dist']),
+                rows.append([d[2:], venue, str(race['R']), f'{i:2d}', short_name(race, names), '障' if _hurdle(race) else ('ダ' if dirt else '芝'), str(race['dist']),
                     h['name'], sex, str(int(d[:4]) - int(birth[:4])) if birth[:4].isdigit() else '', '', h['weight'], tr, aff,
                     owner_name(prof.get('owner', '')), owner_name(prof.get('breeder', '')), prof.get('sire', ''), prof.get('dam', ''),
                     f"UX{h['id'][2:]}", str(race['nichi']), prof.get('damsire', ''), COAT.get(prof.get('coat', ''), prof.get('coat', '')),
@@ -522,7 +522,7 @@ def shutsuba_rows(race, names):
         prof = names.h.get(h['id'], {})
         tcode = h['trainer_code'] or names.tn.get(_nospace(h['trainer']), '')
         tname = names.t[tcode][0] if tcode in names.t else _nospace(h['trainer'])
-        rows.append([f"{VENUE_PREFIX[venue]}{race['R']}", sn, 'ダ' if dirt else '芝', str(race['dist']), race['post'],
+        rows.append([f"{VENUE_PREFIX[venue]}{race['R']}", sn, '障' if hurdle else ('ダ' if dirt else '芝'), str(race['dist']), race['post'],
                      str(h['num']) if h['num'] else '未', h['name'], '', '', '', '', h['sex'], h['age'], jockey_name(h, names),
                      _kin(h['weight'], h['mark']), '', '', '', '', '', '', '', DIVISION.get(h['division'], ''), tname, '', '',
                      prof.get('sire') or h['sire'], '', prof.get('damsire') or h['damsire'], '', '', ''])
@@ -541,12 +541,13 @@ def collect_shutsuba(date, db=None, log=print):
         log(f'[shutsuba] {date} {lc[9:11]}: {len(rows)} horses so far')
     return rows
 
-def drawn(date):
-    """True when JRA's 出馬表 for the day already shows 馬番 (checked on the day's first race)."""
-    codes = shutsuba_codes().get(date)
-    if not codes: return False
-    rc = shutsuba_race_codes(codes[0])
-    return bool(rc) and any(h['num'] for h in parse_shutsuba(get_d(rc[0]), rc[0])['horses'])
+def drawn_count(date):
+    """How many runners JRA's 出馬表 for the day already shows with 馬番 (graded races are drawn a day earlier)."""
+    n = 0
+    for lc in shutsuba_codes().get(date) or []:
+        for rc in shutsuba_race_codes(lc):
+            n += sum(1 for h in parse_shutsuba(get_d(rc), rc)['horses'] if h['num'])
+    return n
 
 def write_toujitsu(out, date, rows):
     import csv

@@ -14,7 +14,8 @@
    plan then runs 7-2 (暫定予想・カレンダー) on it as with TARGET's file.
 5. 当日出走馬: for each race day JRA's 出馬表 lists (from Thursday evening), when Drive has no 当日出走馬YYYYMMDD*.csv,
    当日出走馬YYYYMMDD_JRA.csv (TARGET's v02 layout, 馬番 '未') is built and uploaded; the plan then runs 1. (予想・公開).
-   Once JRA shows 馬番 (the Friday draw), our file is rebuilt in place (馬番, 騎手変更), which makes the plan predict again.
+   Whenever JRA shows more 馬番 than our file (Sunday's graded races are drawn on Friday, the rest on Saturday), our file is
+   rebuilt in place (馬番, 騎手変更), which makes the plan predict again.
    A TARGET 当日出走馬 for the day (any other file name) always wins: nothing is built or updated then.
 Prints lines starting with [jra-weekly]."""
 import sys, os, re, io, csv, json, tempfile, argparse, datetime as dt
@@ -163,8 +164,10 @@ def shutsuba_step(s, by, today, dry):
             if d == today: print(f'[jra-weekly] {mine}: race day, kept (odds runs fill 馬番・オッズ)'); continue
             tmp = tempfile.mkdtemp(); gdrive.download(s, by[mine]['id'], os.path.join(tmp, mine))
             import pandas as pd
-            have = pd.read_csv(os.path.join(tmp, mine), encoding='cp932', dtype=str)['馬番'].astype(str).str.isdigit().any()
-            if have or not jr.drawn(d): print(f'[jra-weekly] {mine}: up to date ({"馬番あり" if have else "枠順未確定"})'); continue
+            nums = pd.read_csv(os.path.join(tmp, mine), encoding='cp932', dtype=str)['馬番'].astype(str).str.isdigit()
+            if nums.all(): print(f'[jra-weekly] {mine}: up to date (馬番あり)'); continue
+            if jr.drawn_count(d) <= int(nums.sum()):
+                print(f'[jra-weekly] {mine}: up to date (馬番 {int(nums.sum())}/{len(nums)}頭、JRAも未確定)'); continue
         if not dry and not gdrive.can_create():
             print('[jra-weekly] GOOGLE_OAUTH_JSON がないためDriveに作成できません'); return
         if db_dir is None:
@@ -174,11 +177,11 @@ def shutsuba_step(s, by, today, dry):
         rows = jr.collect_shutsuba(d, os.path.join(db_dir, 'keiba.duckdb'), log=lambda m: print(m, file=sys.stderr))
         if not rows: print(f'[jra-weekly] 当日出走馬{d}: JRAの出馬表が空'); continue
         path = jr.write_toujitsu(tempfile.mkdtemp(), d, rows)
-        drawn = any(r[5] != '未' for r in rows)
-        if dry: print(f'[jra-weekly] {mine}: dry run, {len(rows)} horses (馬番{"あり" if drawn else "未定"}) → {path}'); continue
+        drawn = sum(r[5] != '未' for r in rows)
+        if dry: print(f'[jra-weekly] {mine}: dry run, {len(rows)} horses (馬番 {drawn}/{len(rows)}頭) → {path}'); continue
         if mine in by: update(s, by[mine]['id'], path); act = 'updated'
         else: upload(s, path, mine); act = 'uploaded'
-        print(f'[jra-weekly] {act} {mine} ({len(rows)} horses, 馬番{"あり" if drawn else "未定"})')
+        print(f'[jra-weekly] {act} {mine} ({len(rows)} horses, 馬番 {drawn}/{len(rows)}頭)')
 
 if __name__ == '__main__':
     ap = argparse.ArgumentParser(); ap.add_argument('--dry-run', action='store_true'); a = ap.parse_args()
