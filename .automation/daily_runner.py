@@ -63,8 +63,28 @@ else:
     targets = ns['convert_tokubetsu_toroku_and_split'](a.file)
 RESULT['targets'] = list(targets)
 RESULT['track'] = {}
+RESULT['baba'] = {}
+# Open-Meteo answers 429 now and then from the shared cloud address: retry a few times before the
+# prediction falls back to the official labels alone
+_hourly0 = ns['_tp_fetch_hourly']
+def _hourly_retry(venue, *args, **kw):
+    import time
+    for i in range(3):
+        try:
+            return _hourly0(venue, *args, **kw)
+        except Exception as e:
+            if i == 2 or '429' not in str(e): raise
+            print(f'[track] open-meteo retry {venue}: {e}'); time.sleep(10 * (i + 1))
+ns['_tp_fetch_hourly'] = _hourly_retry
 for csv in targets:
-    tc = ns['predict_track_by_race'](csv)
+    # The static 馬場情報 page keeps Friday noon's labels all weekend: pass JRA's live announcement as the anchor
+    import re, jra_baba
+    try:
+        anchor = jra_baba.anchors(re.search(r'(20\d{6})', csv).group(1))
+    except Exception as e:
+        print(f'[baba] live 馬場状態 unavailable, using the static page: {e}'); anchor = {}
+    RESULT['baba'][csv] = anchor
+    tc = ns['predict_track_by_race'](csv, anchor=anchor)
     # 特別登録 runs days ahead with no post times, so the prediction can come back empty: fall back to 良 per venue,
     # as the runbook's 7-2 example passes it
     import pandas as pd
