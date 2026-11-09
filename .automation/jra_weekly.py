@@ -112,6 +112,7 @@ def results_step(s, by, today, dry):
     for n in ('keiba.duckdb', 'keiba.duckdb.wal'):
         if n in by: gdrive.download(s, by[n]['id'], os.path.join(tmp, n))
     R, H, P = jra_results.collect(dates, db, log=lambda m: print(m, file=sys.stderr))
+    s = gdrive.svc()  # the scrape takes ~10 min; the old Drive connection is dead by now (BrokenPipeError 11/09)
     for n in ('keiba.duckdb', 'keiba.duckdb.wal'):  # only needed for the name maps
         if os.path.exists(os.path.join(tmp, n)): os.remove(os.path.join(tmp, n))
     paths = jra_results.write(tmp, d0, R, H, P)
@@ -142,6 +143,7 @@ def tokubetsu_step(s, by, today, dry):
     for n in ('keiba.duckdb', 'keiba.duckdb.wal'):
         if n in by: gdrive.download(s, by[n]['id'], os.path.join(tmp, n))
     dates, rows = jr.collect_tokubetsu(db, log=lambda m: print(m, file=sys.stderr))
+    s = gdrive.svc()  # fresh connection after the long scrape
     for n in ('keiba.duckdb', 'keiba.duckdb.wal'):
         if os.path.exists(os.path.join(tmp, n)): os.remove(os.path.join(tmp, n))
     path = jr.write_tokubetsu(tmp, dates[0], rows)
@@ -175,6 +177,7 @@ def shutsuba_step(s, by, today, dry):
             for n in ('keiba.duckdb', 'keiba.duckdb.wal'):
                 if n in by: gdrive.download(s, by[n]['id'], os.path.join(db_dir, n))
         rows = jr.collect_shutsuba(d, os.path.join(db_dir, 'keiba.duckdb'), log=lambda m: print(m, file=sys.stderr))
+        s = gdrive.svc()  # fresh connection after the long scrape
         if not rows: print(f'[jra-weekly] 当日出走馬{d}: JRAの出馬表が空'); continue
         path = jr.write_toujitsu(tempfile.mkdtemp(), d, rows)
         drawn = sum(r[5] != '未' for r in rows)

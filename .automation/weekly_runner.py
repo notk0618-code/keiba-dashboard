@@ -81,6 +81,18 @@ if 'review' in steps:
         # review.html is built inside rebuild_all_derived_data(), i.e. before the rows above were recorded:
         # rebuild it now so the page shows this weekend
         ns['publish_review_page'](); RESULT['review_page'] = 'rebuilt'
+    try:  # 切り口別(堅軸/指数トップ/人気薄)×単複の数字を、review.html に埋め込まれたデータからそのまま出す
+        import re, json
+        html = open(os.path.join(a.site, 'review.html'), encoding='utf-8').read()
+        data = json.loads(re.search(r'const DATA = (\{.*?\});', html, re.S).group(1))
+        print('=== 切り口別 振り返り (review.html) ===')
+        for k in ('top', 'kenjiku', 'ana'):
+            for pt in data[k]['pts']:
+                if pt['d'] in RESULT['review']:
+                    print(f"{data[k]['label']} {pt['d']}: n={pt['n']} 単勝率={pt['wr']}% 複勝率={pt['pr']}% "
+                          f"単勝回収率={pt['wroi']}% 複勝回収率={pt['proi']}%")
+    except Exception as e:
+        print(f'[runner] review.html summary skipped: {e!r}')
 if 'review' in steps:  # 7-25: score the track-condition predictions against the imported results
     import pandas as pd, datetime as dt
     d0 = dt.date(int(a.date[:4]), int(a.date[4:6]), int(a.date[6:]))
