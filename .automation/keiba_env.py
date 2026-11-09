@@ -55,6 +55,15 @@ def load(site):
         ns[fn] = _stage_file
     ns['upload_files_batch_to_github'] = _stage_batch
 
+    _dates0 = ns['get_existing_dashboard_dates_from_github']
+    def _dashboard_dates_with_staged():
+        # restore_v7 lists dashboard_*.html from GitHub's main, but this run's new pages are only staged in the
+        # clone until the shell wrapper pushes: add the clone's files so a new date (e.g. a 特別登録 day) is
+        # linked from calendar.html in the same run instead of waiting for the next calendar rebuild
+        local = {f[len('dashboard_'):-len('.html')] for f in os.listdir(site) if f.startswith('dashboard_') and f.endswith('.html')}
+        return set(_dates0()) | local
+    ns['get_existing_dashboard_dates_from_github'] = _dashboard_dates_with_staged
+
     try:
         ns['_RACE_ARCHIVE_KEYS_CACHE'] = set(json.load(open(os.path.join(site, 'race_archive.json'), encoding='utf-8')).keys())
         print(f"[runner] race_archive keys from clone: {len(ns['_RACE_ARCHIVE_KEYS_CACHE'])}")
