@@ -50,11 +50,18 @@ jobs:
           if [ "$EVENT" = "schedule" ] && [ "$SCHED" = "40 23 * * 5,6" ]; then UNTIL="14:30"; fi
           mkdir -p "logs/$D"
           LOG="logs/$D/poller_$(TZ=Asia/Tokyo date +%H%M).log"
+          # Model S shadow (research only): a separate background process next to the poller. It writes only
+          # data/<date>/s_shadow/ (picked up by the poller's own commits) and its log; its failure never changes RC.
+          SLOG="logs/$D/s_shadow_$(TZ=Asia/Tokyo date +%H%M).log"
+          python s_shadow/shadow_job.py raceday . --date "$D" ${UNTIL:+--until "$UNTIL"} > "$SLOG" 2>&1 &
+          SPID=$!
           set +e
           python -m afme_fwd.poller . --date "$D" ${UNTIL:+--until "$UNTIL"} --sync > "$LOG" 2>&1
           RC=$?
+          wait $SPID; echo "s_shadow exit code: $?"
           set -e
           git add logs && git commit -q -m "afme forward $D log" || true
+          git add data/*/s_shadow 2>/dev/null && git commit -q -m "s shadow $D" || true
           for i in 1 2 3 4; do git pull -q --rebase && git push -q && break; sleep $((2**i)); done
           echo "poller exit code: $RC"
           exit $RC
