@@ -74,6 +74,18 @@
     var a = aPart(rid);
     return combos(item.t, item.m, item.c).map(function (c) { return a + '_b' + item.t + '_c0_' + c.join('_'); });
   }
+  // netkeiba's own grouped form (IpatDataModel.js 方式): c0 通常 (one combination), c1 フォーメーション (columns
+  // joined by '_', horses in a column by '-'), c2 BOX (one column). 単勝・複勝 with several horses → c1 (netkeiba splits
+  // them into c0 rows when voting). Covers ながし too: a ながし is a フォーメーション with one horse in the 軸 column.
+  function groupIds(rid, item) {
+    var a = aPart(rid) + '_b' + item.t, cs = combos(item.t, item.m, item.c), k = typeOf(item.t)[2];
+    if (!cs.length) return [];
+    if (cs.length === 1) return [a + '_c0_' + cs[0].join('_')];
+    var col = function (c) { return c.slice().sort(function (x, y) { return x - y; }).join('-'); };
+    if (k === 1) return [a + '_c1_' + col(item.c[0])];
+    if (item.m === 'box') return [a + '_c2_' + col(item.c[0])];
+    return [a + '_c1_' + item.c.slice(0, k).map(col).join('_')];
+  }
   function oddsKey(code, c) { return c.join('-'); } // combos() already sorts unordered types
   function fmtOdds(v) {
     if (v === undefined || v === null) return '票数なし';
@@ -233,7 +245,7 @@
     }
     function buyUrl() {
       var b = [];
-      list.forEach(function (it) { betIds(rid, it).forEach(function (id) { b.push([id, it.y * 100]); }); });
+      list.forEach(function (it) { groupIds(rid, it).forEach(function (id) { b.push([id, it.y * 100]); }); });
       return NK_BET + rid + '#kb=' + encodeURIComponent(JSON.stringify({r: rid, b: b}));
     }
     function text() {
@@ -294,6 +306,6 @@
       try { build(el); } catch (e) { if (window.console) console.error('[betbuilder]', e); }
     });
   }
-  window.KBBetBuilder = {combos: combos, betIds: betIds, aPart: aPart, init: init};
+  window.KBBetBuilder = {combos: combos, betIds: betIds, groupIds: groupIds, aPart: aPart, init: init};
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();
