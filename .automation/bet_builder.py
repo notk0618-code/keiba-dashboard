@@ -47,10 +47,26 @@ def runners(rd):
     return sorted(out, key=lambda x: (x[0] == 0, x[0]))
 
 
-def panel(rid, anchor, horses):
+def race_info(rd, date, venue, race_no):
+    """{'d': 'YYYY-MM-DD', 'v': venue, 'r': R, 'n': レース名, 's': 芝/ダ, 'm': 距離, 'p': 発走} for the panel header;
+    fields the data does not have are left out."""
+    info = {'d': f'{date[:4]}-{date[4:6]}-{date[6:]}', 'v': venue, 'r': int(race_no)}
+    row = rd.iloc[0]
+    for key, cols in (('n', ['レース名']), ('s', ['芝ダ', '芝・ダ']), ('m', ['距離']), ('p', ['発走時刻', '発走'])):
+        for c in cols:
+            v = row.get(c) if c in rd.columns else None
+            if v is not None and str(v).strip() not in ('', 'nan', 'None'):
+                v = str(v).strip()
+                if key == 'm': v = re.sub(r'\.0$', '', v)
+                info[key] = v; break
+    return info
+
+
+def panel(rid, anchor, horses, info=None):
     data = html.escape(json.dumps(horses, ensure_ascii=False), quote=True)
+    extra = f' data-info="{html.escape(json.dumps(info, ensure_ascii=False), quote=True)}"' if info else ''
     return (f'<div class="kb-bet" data-race-id="{rid}" data-anchor="{html.escape(anchor, quote=True)}" '
-            f'data-horses="{data}"></div>')
+            f'data-horses="{data}"{extra}></div>')
 
 
 def insert(main, block):
@@ -81,7 +97,11 @@ def install(ns, log=print):
             if not rid: return main, detail
             rd = race_results_df[(race_results_df['場所'] == venue) & (race_results_df['R'] == race_no)]
             if rd.empty: return main, detail
-            main = insert(main, panel(rid, f'{venue}_{race_no}', runners(rd)))
+            try:
+                info = race_info(rd, date, venue, race_no)
+            except Exception:
+                info = None
+            main = insert(main, panel(rid, f'{venue}_{race_no}', runners(rd), info))
         except Exception as e:
             log(f'[bet_builder] skipped ({venue}{race_no}R): {type(e).__name__}: {e}')
         return main, detail

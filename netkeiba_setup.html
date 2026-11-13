@@ -1,21 +1,48 @@
 <!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="robots" content="noindex"><title>netkeiba登録の設定</title><style>
+<meta name="robots" content="noindex"><title>即PATへ送信の設定</title><style>
 body{font-family:sans-serif;margin:0;padding:12px 16px;background:#fff;color:#111;max-width:720px;line-height:1.7;font-size:14px}
-h1{font-size:18px;margin:4px 0 8px} h2{font-size:15px;margin:18px 0 4px;color:#1d3f72}
+h1{font-size:18px;margin:4px 0 8px} h2{font-size:15px;margin:18px 0 4px;color:#1d3f72} h3{font-size:14px;margin:14px 0 4px}
 ol{padding-left:20px} li{margin:4px 0} textarea{width:100%;height:110px;font-size:11px;box-sizing:border-box}
 button{font-size:14px;padding:8px 14px;border-radius:8px;border:1px solid #1d3f72;background:#1d3f72;color:#fff}
 .warn{background:#fff4e5;border:1px solid #f0b060;border-radius:6px;padding:8px 10px;font-size:13px;margin:10px 0}
 .pc a{display:inline-block;background:#e9514e;color:#fff;padding:6px 12px;border-radius:8px;text-decoration:none}
 </style></head><body>
 <a href="index.html" style="font-size:12px;">← ダッシュボード</a>
-<h1>🎫 netkeiba登録（ブックマーク）の設定</h1>
-<p id="to-chrome" style="display:none"><a id="to-chrome-a" href="#" style="display:inline-block;background:#1d3f72;color:#fff;padding:8px 14px;border-radius:8px;text-decoration:none">このページをChromeで開く</a></p>
-<script>(function(){var ua=navigator.userAgent;if(/iPhone|iPad|iPod/.test(ua)&&!/CriOS/.test(ua)&&location.protocol==='https:'){document.getElementById('to-chrome-a').href=location.href.replace(/^https:\/\//,'googlechromes://');document.getElementById('to-chrome').style.display='block';}})();</script>
-<p>予想ページの「🎫 馬券を組む」で作った買い目を、netkeibaの買い目リストへ1タップで入れるためのブックマークです。最初に1回だけ設定します。</p>
-<div class="warn">このブックマークは、netkeibaの購入ページ（買い目リスト）に買い目を書き込むだけです。購入はしません。購入はいつもどおり「IPAT投票へすすむ」→IPATログイン→投票内容の確認、をご自身で行います。<br>
-netkeibaが公開していない仕組みを使っているため、netkeiba側の変更で急に動かなくなることがあります。そのときは買い目を手で入力してください。</div>
+<h1>🎫 即PATへ送信（netkeiba自動登録）の設定</h1>
+<p id="to-safari" style="display:none"><a id="to-safari-a" href="#" style="display:inline-block;background:#1d3f72;color:#fff;padding:8px 14px;border-radius:8px;text-decoration:none">このページをSafariで開く</a><br>
+<span style="font-size:12px;color:#666">iPhoneのChromeは拡張機能に対応していないため、設定と購入はSafariで行います（予想はChromeのままで大丈夫です）。</span></p>
+<script>(function(){var ua=navigator.userAgent;if(/iPhone|iPad|iPod/.test(ua)&&/CriOS/.test(ua)&&location.protocol==='https:'){document.getElementById('to-safari-a').href='x-safari-'+location.href;document.getElementById('to-safari').style.display='block';}})();</script>
+<p>予想ページの「🎫 馬券を組む」で作った買い目を、「即PATへ送信」の1タップでnetkeibaの買い目リストへ自動で入れ、netkeibaのIPAT連携でIPATの確認画面まで進めるための設定です。<b>最初に1回だけ</b>行います。</p>
+<div class="warn">このしくみは、netkeibaの購入ページ（買い目リスト）に買い目を書き込むだけです。ログインも購入もしません。IPATの加入者番号・暗証番号などは、このサイトでは一切扱いません（netkeiba・IPATの画面でご自身で入力します）。最後の投票は、IPATの確認画面でご自身で行います。<br>
+netkeibaが公開していない仕組みを使っているため、netkeiba側の変更で急に登録できなくなることがあります。そのときはnetkeibaの画面上部に赤い表示が出ます（間違った買い目は入りません）。</div>
 
-<h2>iPhone（Safari）での設定</h2>
+<h2>iPhoneでの設定（Safari・約3分）</h2>
+<ol>
+<li>App Storeで無料の <a href="https://apps.apple.com/jp/app/userscripts/id1463298887">Userscripts</a> をインストールします（Safari用の拡張機能です）。</li>
+<li>iPhoneの「設定」→「アプリ」→「Safari」→「機能拡張」→「Userscripts」をオンにします。同じ画面の「netkeiba.com」（または「その他のWebサイト」）を<b>「許可」</b>にします。</li>
+<li>このページをSafariで開いたまま、<a id="us" href="netkeiba_autoreg.user.js"><b>自動登録スクリプトを追加</b></a> をタップします。</li>
+<li>開いたページで、アドレス欄の左の「ぁあ」（またはパズルのアイコン）→「Userscripts」をタップし、表示された「インストール」（Install）をタップします。</li>
+<li>Safariで <a href="https://race.sp.netkeiba.com/">netkeiba</a> にログインしておきます。netkeibaの「IPAT情報」を登録しておくと、IPATログインの入力も省けます（netkeiba公式の機能です）。</li>
+</ol>
+
+<h2>使い方（2回目以降）</h2>
+<ol>
+<li>予想ページの各レースの「🎫 馬券を組む」で、券種・買い方・馬・金額を選んで「＋ 購入予定に追加」。</li>
+<li>下の「即PATへ送信 ▶」をタップ。netkeibaの購入ページがSafariで開き、上に緑色で「○件を買い目リストに登録しました」と出ます。</li>
+<li>金額を確かめて「IPAT投票へすすむ」→ IPATの確認画面で内容を確認して、ご自身で投票します。</li>
+</ol>
+<p style="font-size:12px;color:#666">同じ買い目をもう一度送っても二重には入りません（同じ組番は金額が上書きされます）。netkeibaの買い目リストにもともと入っていた買い目は消しません。</p>
+
+<h2>パソコンの場合</h2>
+<ol>
+<li>Chrome・Edge・Firefoxに拡張機能 <a href="https://www.tampermonkey.net/">Tampermonkey</a> を入れます。</li>
+<li><a href="netkeiba_autoreg.user.js">自動登録スクリプトを追加</a> を開き、Tampermonkeyの画面で「インストール」。</li>
+<li>あとはiPhoneと同じく「即PATへ送信」で自動登録されます。</li>
+</ol>
+
+<h2 style="margin-top:28px">予備：ブックマークで登録する方法</h2>
+<p style="font-size:13px">上の自動登録が使えないとき（iPhoneのChromeで購入したいときなど）は、ブックマークでも登録できます。予想ページの「購入はSafariで開く」のチェックを外すと、Chromeでnetkeibaが開きます。</p>
+<h3>iPhone（Safari）のブックマーク</h3>
 <ol>
 <li>下の「コードをコピー」を押します。</li>
 <li>このページを開いたまま、共有ボタン（□↑）→「ブックマークを追加」→ 名前を <b>netkeiba登録</b> にして保存します。</li>
@@ -24,8 +51,7 @@ netkeibaが公開していない仕組みを使っているため、netkeiba側�
 <p><button id="copy">コードをコピー</button> <span id="done" style="color:#0f7a5c"></span></p>
 <textarea id="code" readonly>javascript:(function(){try{var h=location.hash.match(/[#&amp;]kb=([^&amp;]+)/),raw=h?decodeURIComponent(h[1]):prompt(&#x27;\u4e88\u60f3\u30da\u30fc\u30b8\u306e\u300cnetkeiba\u3067\u8cfc\u5165\u3078\u300d\u304b\u3089\u958b\u3044\u305f\u30da\u30fc\u30b8\u3067\u4f7f\u3063\u3066\u304f\u3060\u3055\u3044\u3002&#x27;);if(!raw)return;var d=JSON.parse(raw),q=location.search.match(/race_id=(\d{12})/);if(location.hostname.indexOf(&#x27;netkeiba.com&#x27;)&lt;0||!q){alert(&#x27;netkeiba\u306e\u8cfc\u5165\u30da\u30fc\u30b8\uff08bet_list\uff09\u3067\u4f7f\u3063\u3066\u304f\u3060\u3055\u3044&#x27;);return}if(q[1]!==d.r){alert(&#x27;\u958b\u3044\u3066\u3044\u308b\u30ec\u30fc\u30b9\u3068\u8cb7\u3044\u76ee\u306e\u30ec\u30fc\u30b9\u304c\u9055\u3044\u307e\u3059&#x27;);return}var k=&#x27;ndi::bet_&#x27;+d.r,s=null;try{s=JSON.parse(localStorage.getItem(k))}catch(e){}if(!s||!s.list)s={list:{},uptime:null};var n=0;d.b.forEach(function(x){if(/^a\d-\d{2}-\d{1,2}_b[1-8]_c[0-8](_\d{1,2}(-\d{1,2})*){1,3}(_1)?$/.test(x[0])&amp;&amp;x[1]&gt;=100&amp;&amp;x[1]/100==Math.floor(x[1]/100)){s.list[d.r+&#x27;_kb_&#x27;+x[0]]={bet_id:x[0],bet_money:x[1]};n++}});var t=new Date(),p=function(v){return(&#x27;0&#x27;+v).slice(-2)};s.uptime=t.getFullYear()+&#x27;-&#x27;+p(t.getMonth()+1)+&#x27;-&#x27;+p(t.getDate())+&#x27; &#x27;+p(t.getHours())+&#x27;:&#x27;+p(t.getMinutes())+&#x27;:&#x27;+p(t.getSeconds());localStorage.setItem(k,JSON.stringify(s));history.replaceState(null,&#x27;&#x27;,location.pathname+location.search);alert(n+&#x27;\u4ef6\u3092\u8cb7\u3044\u76ee\u30ea\u30b9\u30c8\u306b\u767b\u9332\u3057\u307e\u3057\u305f\u3002\u91d1\u984d\u3092\u78ba\u8a8d\u3057\u3066\u300cIPAT\u6295\u7968\u3078\u3059\u3059\u3080\u300d\u3078\u3002&#x27;);location.reload()}catch(e){alert(&#x27;\u767b\u9332\u3067\u304d\u307e\u305b\u3093\u3067\u3057\u305f: &#x27;+e.message)}})();</textarea>
 
-<h2>iPhone（Chrome）での設定</h2>
-<p style="font-size:13px">予想ページの「netkeibaで購入へ」は、iPhoneでは最初からChromeで開くようになっています。Chromeでも同じブックマークを登録してください（Safariのブックマークとは別です）。</p>
+<h3>iPhone（Chrome）のブックマーク</h3>
 <ol>
 <li>このページをChromeで開き、下の「コードをコピー」を押します。</li>
 <li>右下の「…」→「ブックマークに追加」。</li>
@@ -33,16 +59,12 @@ netkeibaが公開していない仕組みを使っているため、netkeiba側�
 <li>使うときは、netkeibaのページでアドレス欄に「netkeiba登録」と入力し、候補に出たブックマーク（☆のマーク）をタップします。</li>
 </ol>
 
-<h2>使い方</h2>
+<h3>ブックマークの使い方</h3>
 <ol>
-<li>予想ページの各レースの「🎫 馬券を組む」で、券種・馬・金額を選んで「＋ 買い目に追加」。</li>
-<li>「netkeibaで購入へ ▶」を押すと、そのレースのnetkeiba購入ページが開きます。</li>
-<li>開いたページで、アドレス欄をタップして「netkeiba登録」と入力し、候補に出たブックマークをタップします（ブックマーク一覧から選んでも同じです）。</li>
+<li>「即PATへ送信 ▶」でnetkeibaの購入ページが開いたら、アドレス欄をタップして「netkeiba登録」と入力し、候補に出たブックマークをタップします。</li>
 <li>「○件を買い目リストに登録しました」と出たら、金額を確認して「IPAT投票へすすむ」。</li>
 </ol>
-<p style="font-size:12px;color:#666">同じ買い目でもう一度タップしても二重には入りません（同じ組番は金額が上書きされます）。netkeibaの買い目リストにもともと入っていた買い目は消しません。</p>
-
-<h2>パソコンの場合</h2>
+<h3>パソコンのブックマーク</h3>
 <p class="pc">このボタンをブックマークバーへドラッグ: <a id="bm" href="#">netkeiba登録</a></p>
 <script>
 (function(){var c=document.getElementById('code');document.getElementById('bm').setAttribute('href',c.value);

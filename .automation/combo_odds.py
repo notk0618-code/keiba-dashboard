@@ -1,17 +1,17 @@
 """Odds of every bet type for the 🎫 馬券を組む panel (betbuilder.js), from JRA's official odds pages. Read-only on JRA.
 Writes the site file odds/<netkeiba race_id>.json per race that has not started yet:
   {"asof": "HH:MM", "fetched": "YYYY-MM-DD HH:MM", "o": {"1": {"6": 13.9}, "2": {"6": [2.7, 3.9]}, "4": {"6-10": 63.5},
-   "5": {"6-10": [19.6, 21.1]}, "6": {"6-10": 78.1}, "7": {"6-10-13": 210.3}, "8": {"6-10-13": 1495.8}}}
+   "3": {"2-5": 20.1}, "5": {"6-10": [19.6, 21.1]}, "6": {"6-10": 78.1}, "7": {"6-10-13": 210.3}, "8": {"6-10-13": 1495.8}}}
 Keys are 馬番 joined with '-' (ascending for 馬連・ワイド・3連複, finishing order for 馬単・3連単); 複勝・ワイド are [min, max].
 JRA's pages, one per bet type and race (at most one request a second, as jra_odds): 151 単勝・複勝, 154 馬連, 155 ワイド,
-156 馬単, 157 3連複, 158 3連単. Odds are as of the run (hourly on race days), not live.
+156 馬単, 157 3連複, 158 3連単, 153 枠連 (key 枠-枠, ゾロ目 included). Odds are as of the run (hourly on race days), not live.
   python3 combo_odds.py YYYYMMDD SITE_DIR [--races 京都11,東京11]"""
 import re, os, sys, json, datetime as dt
 import jra_odds
 import bet_builder
 
-PAGES = {'4': '154', '5': '155', '6': '156', '7': '157', '8': '158'}
-UNORDERED = {'4', '5', '7'}
+PAGES = {'3': '153', '4': '154', '5': '155', '6': '156', '7': '157', '8': '158'}
+UNORDERED = {'3', '4', '5', '7'}
 JST = jra_odds.JST
 
 
@@ -30,10 +30,12 @@ def parse_combo(page, kind):
         heads = re.findall(r'<div class="num">\s*(\d+)\s*</div>', li)
         cap = re.search(r'<caption>\s*(\d+(?:-\d+)*)\s*</caption>', li)
         if cap: heads = cap.group(1).split('-') + heads
+        wk = re.search(r'<caption class="waku(\d)"', li)        # 枠連: one table per first 枠
+        if kind == '3' and wk: heads = [wk.group(1)]
         if not heads: continue
         for th, td in re.findall(r'<th scope="row">\s*(\d+)\s*</th>\s*<td[^>]*>(.*?)</td>', li):
             nums = [int(x) for x in heads + [th]]
-            if len(set(nums)) < len(nums): continue
+            if kind != '3' and len(set(nums)) < len(nums): continue   # 枠連 has ゾロ目 (1-1)
             if kind in UNORDERED: nums = sorted(nums)
             mm = re.search(r'class="min">([\d.]+)<.*?class="max">([\d.]+)<', td)
             v = [float(mm.group(1)), float(mm.group(2))] if mm else _num(td)
