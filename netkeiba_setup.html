@@ -1,0 +1,42 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex"><title>netkeiba登録の設定</title><style>
+body{font-family:sans-serif;margin:0;padding:12px 16px;background:#fff;color:#111;max-width:720px;line-height:1.7;font-size:14px}
+h1{font-size:18px;margin:4px 0 8px} h2{font-size:15px;margin:18px 0 4px;color:#1d3f72}
+ol{padding-left:20px} li{margin:4px 0} textarea{width:100%;height:110px;font-size:11px;box-sizing:border-box}
+button{font-size:14px;padding:8px 14px;border-radius:8px;border:1px solid #1d3f72;background:#1d3f72;color:#fff}
+.warn{background:#fff4e5;border:1px solid #f0b060;border-radius:6px;padding:8px 10px;font-size:13px;margin:10px 0}
+.pc a{display:inline-block;background:#e9514e;color:#fff;padding:6px 12px;border-radius:8px;text-decoration:none}
+</style></head><body>
+<a href="index.html" style="font-size:12px;">← ダッシュボード</a>
+<h1>🎫 netkeiba登録（ブックマーク）の設定</h1>
+<p>予想ページの「🎫 馬券を組む」で作った買い目を、netkeibaの買い目リストへ1タップで入れるためのブックマークです。最初に1回だけ設定します。</p>
+<div class="warn">このブックマークは、netkeibaの購入ページ（買い目リスト）に買い目を書き込むだけです。購入はしません。購入はいつもどおり「IPAT投票へすすむ」→IPATログイン→投票内容の確認、をご自身で行います。<br>
+netkeibaが公開していない仕組みを使っているため、netkeiba側の変更で急に動かなくなることがあります。そのときは買い目を手で入力してください。</div>
+
+<h2>iPhone（Safari）での設定</h2>
+<ol>
+<li>下の「コードをコピー」を押します。</li>
+<li>このページを開いたまま、共有ボタン（□↑）→「ブックマークを追加」→ 名前を <b>netkeiba登録</b> にして保存します。</li>
+<li>ブックマーク一覧（📖）→「編集」→ いま保存した「netkeiba登録」を開き、アドレス欄の中身を全部消して、コピーしたコードを貼り付けて「完了」。</li>
+</ol>
+<p><button id="copy">コードをコピー</button> <span id="done" style="color:#0f7a5c"></span></p>
+<textarea id="code" readonly>javascript:(function(){try{var h=location.hash.match(/[#&amp;]kb=([^&amp;]+)/),raw=h?decodeURIComponent(h[1]):prompt(&#x27;予想ページの「netkeibaで購入へ」から開いたページで使ってください。&#x27;);if(!raw)return;var d=JSON.parse(raw),q=location.search.match(/race_id=(\d{12})/);if(location.hostname.indexOf(&#x27;netkeiba.com&#x27;)&lt;0||!q){alert(&#x27;netkeibaの購入ページ（bet_list）で使ってください&#x27;);return}if(q[1]!==d.r){alert(&#x27;開いているレースと買い目のレースが違います&#x27;);return}var k=&#x27;ndi::bet_&#x27;+d.r,s=null;try{s=JSON.parse(localStorage.getItem(k))}catch(e){}if(!s||!s.list)s={list:{},uptime:null};var n=0;d.b.forEach(function(x){if(/^a\d-\d{2}-\d{1,2}_b[1-8]_c0_\d{1,2}(_\d{1,2}){0,2}$/.test(x[0])&amp;&amp;x[1]&gt;=100&amp;&amp;x[1]%100==0){s.list[d.r+&#x27;_kb_&#x27;+x[0]]={bet_id:x[0],bet_money:x[1]};n++}});var t=new Date(),p=function(v){return(&#x27;0&#x27;+v).slice(-2)};s.uptime=t.getFullYear()+&#x27;-&#x27;+p(t.getMonth()+1)+&#x27;-&#x27;+p(t.getDate())+&#x27; &#x27;+p(t.getHours())+&#x27;:&#x27;+p(t.getMinutes())+&#x27;:&#x27;+p(t.getSeconds());localStorage.setItem(k,JSON.stringify(s));history.replaceState(null,&#x27;&#x27;,location.pathname+location.search);alert(n+&#x27;点を買い目リストに登録しました。金額を確認して「IPAT投票へすすむ」へ。&#x27;);location.reload()}catch(e){alert(&#x27;登録できませんでした: &#x27;+e.message)}})();</textarea>
+
+<h2>使い方</h2>
+<ol>
+<li>予想ページの各レースの「🎫 馬券を組む」で、券種・馬・金額を選んで「＋ 買い目に追加」。</li>
+<li>「netkeibaで購入へ ▶」を押すと、そのレースのnetkeiba購入ページが開きます。</li>
+<li>開いたページで、アドレス欄をタップして「netkeiba登録」と入力し、候補に出たブックマークをタップします（ブックマーク一覧から選んでも同じです）。</li>
+<li>「○点を買い目リストに登録しました」と出たら、金額を確認して「IPAT投票へすすむ」。</li>
+</ol>
+<p style="font-size:12px;color:#666">同じ買い目でもう一度タップしても二重には入りません（同じ組番は金額が上書きされます）。netkeibaの買い目リストにもともと入っていた買い目は消しません。</p>
+
+<h2>パソコンの場合</h2>
+<p class="pc">このボタンをブックマークバーへドラッグ: <a id="bm" href="#">netkeiba登録</a></p>
+<script>
+(function(){var c=document.getElementById('code');document.getElementById('bm').setAttribute('href',c.value);
+document.getElementById('copy').onclick=function(){var d=document.getElementById('done');
+function ok(){d.textContent='コピーしました'}
+if(navigator.clipboard)navigator.clipboard.writeText(c.value).then(ok,function(){c.select();document.execCommand('copy');ok()});else{c.select();document.execCommand('copy');ok()}};})();
+</script>
+</body></html>

@@ -99,4 +99,10 @@ if a.kind in ('toujitsu', 'odds'):
         RESULT['bets'] = bet_list.build(ns['con'], keiba_env.KDB, a.site, re.search(r'20(\d{6})', a.file).group(1), jra=JRA)
     except Exception as e:  # the bet list is extra: never let it block the predictions from publishing
         print(f'[bets] failed: {e}'); RESULT['bets'] = {'error': str(e)[:200]}
+    if os.environ.get('BET_BUILDER', '1') != '0':  # odds of every bet type for the 🎫 馬券を組む panel (combo_odds.py)
+        import combo_odds
+        try:
+            RESULT['combo_odds'] = combo_odds.build(re.search(r'(20\d{6})', a.file).group(1), a.site)
+        except Exception as e:  # extra, like the bet list: never block the predictions
+            print(f'[odds] combo odds failed: {e}'); RESULT['combo_odds'] = {'error': str(e)[:200]}
 keiba_env.finish(ns, a.site, a.trial, f'{a.kind} {a.file} (cloud)', RESULT)

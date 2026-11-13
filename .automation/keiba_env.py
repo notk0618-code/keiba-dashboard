@@ -7,6 +7,7 @@ KDB = '/content/drive/MyDrive/keiba_db'
 STAGED = []
 HEADER_ANCHOR = '<a id="confidence-link-icon" href="index.html#confidence-ranking" style="color:#ff6600; text-decoration:none; font-size:16px;" title="堅軸TOP10">🔥</a>'
 BETS_LINK = '<a id="bets-link-icon" href="bets.html" style="color:#ff6600; text-decoration:none; font-size:16px;" title="買い目リスト">🎫</a>'
+BET_BUILDER_JS = '<script src="betbuilder.js" defer></script>'  # race-card bet builder (bet_builder.py)
 
 def load(site):
     os.chdir(KDB)
@@ -36,12 +37,16 @@ def load(site):
     _header = ns['build_common_header']
     def _header_with_bets(*x, **k):  # add the bet list (bet_list.py) to the shared header without editing restore_v7
         h = _header(*x, **k)
-        return h if BETS_LINK in h else h.replace(HEADER_ANCHOR, HEADER_ANCHOR + '\n' + BETS_LINK, 1)
+        h = h if BETS_LINK in h else h.replace(HEADER_ANCHOR, HEADER_ANCHOR + '\n' + BETS_LINK, 1)
+        if os.environ.get('BET_BUILDER', '1') != '0' and BET_BUILDER_JS not in h: h += BET_BUILDER_JS
+        return h
     ns['build_common_header'] = _header_with_bets
     if os.environ.get('PACE_FORECAST', '1') != '0':  # race cards: model B pace forecast panel (display only, pace_forecast.py)
         import pace_forecast; pace_forecast.install(ns)
     if os.environ.get('S_BADGES', '1') != '0':  # race cards: model S badges (display only, s_badges.py; after the pace panel)
         import s_badges; s_badges.install(ns)
+    if os.environ.get('BET_BUILDER', '1') != '0':  # race cards: 🎫 馬券を組む panel → netkeiba bet page (bet_builder.py + betbuilder.js)
+        import bet_builder; bet_builder.install(ns)
     def _stage_bytes(github_filename, data):
         dst = os.path.join(site, github_filename); os.makedirs(os.path.dirname(dst) or site, exist_ok=True)
         with open(dst, 'wb') as f: f.write(data)
