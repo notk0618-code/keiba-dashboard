@@ -223,9 +223,13 @@
         (IOS_NOT_CHROME ? '<label class="note" style="display:block"><input type="checkbox" class="kb-chrome"' + (useChrome() ? ' checked' : '') +
           '> Chromeで開く（Chromeが入っていない場合は外してください）</label>' : '') +
         '<div class="note">netkeibaのページが開いたら、ブックマークの「netkeiba登録」をタップすると買い目リストに入ります（' +
-        '<a href="netkeiba_setup.html">初回設定のしかた</a>）。購入は「IPAT投票へすすむ」からご自身で行ってください。</div>';
+        '<a href="' + setupUrl() + '">初回設定のしかた</a>）。購入は「IPAT投票へすすむ」からご自身で行ってください。</div>';
       inner.innerHTML = h;
       box.querySelector('.kb-cnt').textContent = list.length ? '　' + nrows + '点 / ' + (total * 100).toLocaleString() + '円' : '';
+    }
+    function setupUrl() {
+      var u = new URL('netkeiba_setup.html', location.href).href;
+      return useChrome() ? u.replace(/^https:\/\//, 'googlechromes://') : 'netkeiba_setup.html';
     }
     function buyUrl() {
       var b = [];
