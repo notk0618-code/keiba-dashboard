@@ -9,6 +9,8 @@ button{font-size:14px;padding:8px 14px;border-radius:8px;border:1px solid #1d3f7
 </style></head><body>
 <a href="index.html" style="font-size:12px;">← ダッシュボード</a>
 <h1>🎫 netkeiba登録（ブックマーク）の設定</h1>
+<p id="to-chrome" style="display:none"><a id="to-chrome-a" href="#" style="display:inline-block;background:#1d3f72;color:#fff;padding:8px 14px;border-radius:8px;text-decoration:none">このページをChromeで開く</a></p>
+<script>(function(){var ua=navigator.userAgent;if(/iPhone|iPad|iPod/.test(ua)&&!/CriOS/.test(ua)&&location.protocol==='https:'){document.getElementById('to-chrome-a').href=location.href.replace(/^https:\/\//,'googlechromes://');document.getElementById('to-chrome').style.display='block';}})();</script>
 <p>予想ページの「🎫 馬券を組む」で作った買い目を、netkeibaの買い目リストへ1タップで入れるためのブックマークです。最初に1回だけ設定します。</p>
 <div class="warn">このブックマークは、netkeibaの購入ページ（買い目リスト）に買い目を書き込むだけです。購入はしません。購入はいつもどおり「IPAT投票へすすむ」→IPATログイン→投票内容の確認、をご自身で行います。<br>
 netkeibaが公開していない仕組みを使っているため、netkeiba側の変更で急に動かなくなることがあります。そのときは買い目を手で入力してください。</div>
@@ -21,6 +23,15 @@ netkeibaが公開していない仕組みを使っているため、netkeiba側�
 </ol>
 <p><button id="copy">コードをコピー</button> <span id="done" style="color:#0f7a5c"></span></p>
 <textarea id="code" readonly>javascript:(function(){try{var h=location.hash.match(/[#&amp;]kb=([^&amp;]+)/),raw=h?decodeURIComponent(h[1]):prompt(&#x27;予想ページの「netkeibaで購入へ」から開いたページで使ってください。&#x27;);if(!raw)return;var d=JSON.parse(raw),q=location.search.match(/race_id=(\d{12})/);if(location.hostname.indexOf(&#x27;netkeiba.com&#x27;)&lt;0||!q){alert(&#x27;netkeibaの購入ページ（bet_list）で使ってください&#x27;);return}if(q[1]!==d.r){alert(&#x27;開いているレースと買い目のレースが違います&#x27;);return}var k=&#x27;ndi::bet_&#x27;+d.r,s=null;try{s=JSON.parse(localStorage.getItem(k))}catch(e){}if(!s||!s.list)s={list:{},uptime:null};var n=0;d.b.forEach(function(x){if(/^a\d-\d{2}-\d{1,2}_b[1-8]_c0_\d{1,2}(_\d{1,2}){0,2}$/.test(x[0])&amp;&amp;x[1]&gt;=100&amp;&amp;x[1]%100==0){s.list[d.r+&#x27;_kb_&#x27;+x[0]]={bet_id:x[0],bet_money:x[1]};n++}});var t=new Date(),p=function(v){return(&#x27;0&#x27;+v).slice(-2)};s.uptime=t.getFullYear()+&#x27;-&#x27;+p(t.getMonth()+1)+&#x27;-&#x27;+p(t.getDate())+&#x27; &#x27;+p(t.getHours())+&#x27;:&#x27;+p(t.getMinutes())+&#x27;:&#x27;+p(t.getSeconds());localStorage.setItem(k,JSON.stringify(s));history.replaceState(null,&#x27;&#x27;,location.pathname+location.search);alert(n+&#x27;点を買い目リストに登録しました。金額を確認して「IPAT投票へすすむ」へ。&#x27;);location.reload()}catch(e){alert(&#x27;登録できませんでした: &#x27;+e.message)}})();</textarea>
+
+<h2>iPhone（Chrome）での設定</h2>
+<p style="font-size:13px">予想ページの「netkeibaで購入へ」は、iPhoneでは最初からChromeで開くようになっています。Chromeでも同じブックマークを登録してください（Safariのブックマークとは別です）。</p>
+<ol>
+<li>このページをChromeで開き、下の「コードをコピー」を押します。</li>
+<li>右下の「…」→「ブックマークに追加」。</li>
+<li>「…」→「ブックマーク」→ 追加したブックマークを長押し →「ブックマークを編集」。名前を <b>netkeiba登録</b> に、URLを全部消してコピーしたコードを貼り付けて保存します。</li>
+<li>使うときは、netkeibaのページでアドレス欄に「netkeiba登録」と入力し、候補に出たブックマーク（☆のマーク）をタップします。</li>
+</ol>
 
 <h2>使い方</h2>
 <ol>
