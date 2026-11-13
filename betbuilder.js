@@ -17,6 +17,9 @@
               5: ['#fd3', '#000'], 6: ['#3a3', '#fff'], 7: ['#f93', '#000'], 8: ['#f6a', '#000']};
   var NK_BET = 'https://race.sp.netkeiba.com/ipat/bet_list.html?race_id=';
   var MAX_ROWS = 255; // netkeiba: 1度の投票は255組まで
+  // iPhone/iPad outside Chrome (Safari, home-screen app): offer to open netkeiba in Chrome via its URL scheme
+  var IOS_NOT_CHROME = /iPhone|iPad|iPod/.test(navigator.userAgent) && !/CriOS/.test(navigator.userAgent);
+  function useChrome() { var v = ls('kbOpenChrome'); return IOS_NOT_CHROME && v !== 0; }  // default on
 
   function typeOf(code) { for (var i = 0; i < TYPES.length; i++) if (TYPES[i][0] === code) return TYPES[i]; }
   function ls(k, v) {
@@ -213,7 +216,12 @@
       var ok = list.length && nrows <= MAX_ROWS;
       h += '<div class="note">' + (odds ? 'オッズ: JRA公式 ' + esc(odds.fetched.slice(5).replace('-', '/')) + ' 取得（' + esc(odds.asof) +
         '現在・毎時更新）。最新のオッズはnetkeibaの買い目リストでも確認できます。' : 'オッズはJRAの発売開始後、毎時の更新で表示されます。') + '</div>';
-      h += '<a class="buy' + (ok ? '' : ' off') + '" target="_blank" rel="noopener" href="' + (ok ? buyUrl() : '#') + '">netkeibaで購入へ ▶</a>' +
+      var url = ok ? buyUrl() : '#', chrome = ok && useChrome();
+      if (chrome) url = url.replace(/^https:\/\//, 'googlechromes://');
+      h += '<a class="buy' + (ok ? '' : ' off') + '"' + (chrome ? '' : ' target="_blank" rel="noopener"') + ' href="' + esc(url) + '">netkeibaで購入へ ▶' +
+        (chrome ? '（Chrome）' : '') + '</a>' +
+        (IOS_NOT_CHROME ? '<label class="note" style="display:block"><input type="checkbox" class="kb-chrome"' + (useChrome() ? ' checked' : '') +
+          '> Chromeで開く（Chromeが入っていない場合は外してください）</label>' : '') +
         '<div class="note">netkeibaのページが開いたら、ブックマークの「netkeiba登録」をタップすると買い目リストに入ります（' +
         '<a href="netkeiba_setup.html">初回設定のしかた</a>）。購入は「IPAT投票へすすむ」からご自身で行ってください。</div>';
       inner.innerHTML = h;
@@ -260,7 +268,8 @@
       if (x.dataset.col !== undefined) {
         var c = st.c[+x.dataset.col], n = +x.dataset.n, i = c.indexOf(n);
         if (x.checked && i < 0) c.push(n); else if (!x.checked && i >= 0) c.splice(i, 1);
-      } else if (x.classList.contains('kb-money')) st.money = Math.max(1, Math.floor(+x.value || 1));
+      } else if (x.classList.contains('kb-chrome')) ls('kbOpenChrome', x.checked ? 1 : 0);
+      else if (x.classList.contains('kb-money')) st.money = Math.max(1, Math.floor(+x.value || 1));
       render();
     });
     // marks changed in the card's own selects → refresh the 印 column
