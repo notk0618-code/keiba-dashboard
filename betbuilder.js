@@ -527,7 +527,7 @@
     render();
   }
 
-  // 予想ページの小さな調整（2026/11/14 Taisuke）: 「馬券を組む」をペース予想の下へ、自動予想の印の長い注記を畳む
+  // 予想ページの小さな調整（2026/11/14 Taisuke）: 「馬券を組む」をペース予想の下へ、自動予想の印の長い注記を畳む、推定オッズを消す
   function cardOf(el) {
     var c = el.parentNode;
     while (c && c !== document.body && !c.querySelector('.pace-forecast')) c = c.parentNode;
@@ -542,6 +542,11 @@
     for (var i = 0; i < blocks.length; i++) {
       var d = blocks[i], f = d.firstElementChild;
       if (!f || f.tagName !== 'DIV' || !/自動予想の印/.test(f.textContent) || d.querySelector('details.kb-notes')) continue;
+      // 推定オッズ(目安)のブロックは表示しない（2026/11/14 Taisuke: シンプルに）
+      Array.prototype.slice.call(d.children).forEach(function (x) {
+        var t = x.firstElementChild;
+        if (x.tagName === 'DIV' && t && /^推定オッズ/.test(t.textContent.trim())) x.parentNode.removeChild(x);
+      });
       var notes = Array.prototype.filter.call(d.children, function (x) {
         return x.tagName === 'DIV' && /font-size:\s*10px/.test(x.getAttribute('style') || '');
       });
