@@ -105,4 +105,10 @@ if a.kind in ('toujitsu', 'odds'):
             RESULT['combo_odds'] = combo_odds.build(re.search(r'(20\d{6})', a.file).group(1), a.site)
         except Exception as e:  # extra, like the bet list: never block the predictions
             print(f'[odds] combo odds failed: {e}'); RESULT['combo_odds'] = {'error': str(e)[:200]}
+if os.environ.get('APP_BUILD', '1') != '0':  # new mobile UI data (app.html ← appdata/*.json, app_build.py)
+    import app_build
+    try:
+        RESULT['app'] = app_build.build(a.site)
+    except Exception as e:  # extra: never block the predictions
+        print(f'[app] failed: {e}'); RESULT['app'] = {'error': str(e)[:200]}
 keiba_env.finish(ns, a.site, a.trial, f'{a.kind} {a.file} (cloud)', RESULT)

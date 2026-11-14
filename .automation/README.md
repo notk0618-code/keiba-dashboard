@@ -45,3 +45,10 @@ bash .automation/weekly.sh prod    # 実行 → Driveへ書き戻し → 公開�
 流れ: Driveの keiba_db を `/content/drive/MyDrive/keiba_db` に複製 → restore_v7.py を Colab の代わりに読み込み
 → 0-2 ガバナンスチェック → 0-3 取り込み（会場別に分かれたファイルも取り込む）＋ rebuild_all_derived_data()
 → 0-4 週次振り返り → 変更ファイルをDriveへ書き戻し（途中でDrive側が更新されていたら中止）→ 公開。
+
+## New mobile UI (app.html, 2026-11-14)
+`app_build.py` runs at the end of every daily_runner job (`APP_BUILD=0` turns it off). It splits each recent
+`dashboard_YYMMDD.html` (yesterday … +9 days) into one JSON per race under `appdata/` plus `appdata/index.json`
+(newest 4 dates), which `app.html` reads (date → venue → race, tabs 出馬表/予想/傾向/馬券, horse sheet, 注記 page).
+Races whose post time has passed keep the JSON written before the start, so their marks and odds stay visible.
+Files older than 8 days are removed. The old pages are unchanged.
