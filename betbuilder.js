@@ -353,7 +353,8 @@
         '<b>1点金額</b><span class="amt"><button class="s" data-step="-1">−</button><input type="number" inputmode="numeric" min="1" step="1" class="kb-money" value="' +
           (st.amt / 100) + '">00円<button class="s" data-step="1">＋</button></span>' +
         '<b>合計</b><span><b style="font-size:15px">' + yen((cs.length - dup) * st.amt) + '</b>' + (cr !== null ? '　<span class="od">' + fmtOdds(cr) + '倍</span>' : '') + '</span>' +
-        '</div><div class="kb-row" style="margin-top:6px"><button class="on kb-add"' + (cs.length - dup > 0 ? '' : ' disabled') + '>＋ 購入予定に追加</button>' +
+        '</div>' + (st.amt >= 10000 ? '<div class="msg">1点' + yen(st.amt) + 'です。金額欄は100円単位です（100円なら「1」）。</div>' : '') +
+        '<div class="kb-row" style="margin-top:6px"><button class="on kb-add"' + (cs.length - dup > 0 ? '' : ' disabled') + '>＋ 購入予定に追加</button>' +
         '<button class="kb-clr-sel">選択をクリア</button></div>' + (st.msg ? '<div class="msg">' + esc(st.msg) + '</div>' : '') + '</div>';
       // 6 購入予定
       var tt = totals();

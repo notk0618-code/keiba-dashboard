@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         AF Keiba DATA → netkeiba 買い目自動登録
 // @namespace    https://notk0618-code.github.io/keiba-dashboard/
-// @version      1.0.0
+// @version      1.1.0
 // @description  AF Keiba DATA の「即PATへ送信」で開いた netkeiba 購入ページに、組んだ買い目を自動で登録します（購入はしません）。
 // @match        https://race.sp.netkeiba.com/ipat/bet_list.html*
 // @match        https://race.netkeiba.com/ipat/bet_list.html*
@@ -32,11 +32,20 @@
       var k = 'ndi::bet_' + d.r, s = null;
       try { s = JSON.parse(localStorage.getItem(k)); } catch (e) {}
       if (!s || typeof s !== 'object' || !s.list) s = {list: {}, uptime: null};
+      // netkeiba keys its own rows '<race_id>_<32 hex>'; use the same shape (derived from the bet id, so sending
+      // the same bet again overwrites it) and drop rows left by v1.0 ('<race_id>_kb_<bet id>'), which IPAT rejected (120)
+      var hx = function (str, seed) {
+        var h = seed >>> 0;
+        for (var i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
+        return ('0000000' + h.toString(16)).slice(-8);
+      };
+      var key = function (id) { return d.r + '_' + hx(id, 2166136261) + hx(id, 1) + hx(id, 2) + hx(id, 3); };
+      Object.keys(s.list).forEach(function (x) { if (x.indexOf(d.r + '_kb_') === 0) delete s.list[x]; });
       var n = 0, bad = 0;
       d.b.slice(0, 255).forEach(function (x) {
         if (Array.isArray(x) && /^a\d-\d{2}-\d{1,2}_b[1-8]_c[0-8](_\d{1,2}(-\d{1,2})*){1,3}(_1)?$/.test(x[0]) &&
             x[1] >= 100 && x[1] % 100 === 0 && x[1] <= 1000000) {
-          s.list[d.r + '_kb_' + x[0]] = {bet_id: x[0], bet_money: x[1]}; n++;
+          s.list[key(x[0])] = {bet_id: x[0], bet_money: x[1]}; n++;
         } else bad++;
       });
       var t = new Date(), p = function (v) { return ('0' + v).slice(-2); };
