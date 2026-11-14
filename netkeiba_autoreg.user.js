@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         AF Keiba DATA → netkeiba 買い目自動登録
 // @namespace    https://notk0618-code.github.io/keiba-dashboard/
-// @version      1.1.0
+// @version      1.2.0
 // @description  AF Keiba DATA の「即PATへ送信」で開いた netkeiba 購入ページに、組んだ買い目を自動で登録します（購入はしません）。
 // @match        https://race.sp.netkeiba.com/ipat/bet_list.html*
 // @match        https://race.netkeiba.com/ipat/bet_list.html*
@@ -82,4 +82,21 @@
     if (v[1]) setTimeout(function () { b.remove(); }, 8000);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', show); else show();
+})();
+// 診断: URLの最後に #kbdiag を付けて開くと、このレースの買い目リストの中身（買い目IDと金額）を表示する（読むだけ）
+(function () {
+  'use strict';
+  function diag() {
+    if (!/[#&]kbdiag/.test(location.hash) || !document.body) return;
+    var q = location.search.match(/race_id=(\d{12})/), raw = q ? localStorage.getItem('ndi::bet_' + q[1]) : null, rows = [];
+    try { var l = JSON.parse(raw).list; Object.keys(l).forEach(function (k) { rows.push(k.slice(13) + '  ' + l[k].bet_id + '  ' + l[k].bet_money); }); } catch (e) {}
+    var b = document.createElement('pre');
+    b.style.cssText = 'position:fixed;left:6px;right:6px;top:6px;z-index:2147483647;max-height:70vh;overflow:auto;padding:10px;margin:0;' +
+      'background:#111;color:#0f0;font:12px/1.5 monospace;white-space:pre-wrap;word-break:break-all;border-radius:8px';
+    b.textContent = 'AF診断 v1.2.0  race_id=' + (q ? q[1] : '?') + '\n' + (rows.join('\n') || '(買い目リストは空です)') + '\n\nraw: ' + raw;
+    b.onclick = function () { b.remove(); };
+    document.body.appendChild(b);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', diag); else diag();
+  window.addEventListener('hashchange', diag);
 })();
