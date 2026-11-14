@@ -167,6 +167,8 @@
     '.kbb .kv>b{color:#666;font-weight:normal}' +
     '.kbb .cmb{display:flex;flex-wrap:wrap;gap:2px 10px} .kbb .cmb span{white-space:nowrap}' +
     '.kbb .od{color:#c0262d;font-weight:bold}' +
+    '.kbb .cmb.pcl{display:block} .kbb .cmb.pcl>span{display:block;padding:2px 0}' +
+    '.kbb .cmb.pcl .amt input{width:3.4em;font-size:14px;padding:1px 3px}' +
     '.kbb .amt{display:inline-flex;align-items:center;gap:3px}' +
     '.kbb .amt input{width:4em;font-size:15px;padding:3px;text-align:right;border:1px solid #9fb3cf;border-radius:6px}' +
     '.kbb .msg{font-size:12px;margin-top:4px;color:#b45309}' +
@@ -213,14 +215,25 @@
       if (!t) return null;
       return {code: t[0], method: s.method, selections: s.selections || [], axis: s.axis, partners: s.partners,
               axis_position: s.axis_position || 0, combinations: s.combinations, base_label: s.base_label, note: s.note,
-              amount: Math.max(100, Math.floor((+s.amount_per_ticket || 100) / 100) * 100)};
+              amount: Math.max(100, Math.floor((+s.amount_per_ticket || 100) / 100) * 100), amounts: s.combination_amounts_by_key || {}};
     }
+    // 1点ごとの金額: ながし・フォーメーション（と重複除外で残った分）は組番ごとに変えられる。b.amounts = {'6_10': 円}
+    function perCombo(b) { return b.method === 'nagashi' || b.method === 'formation' || b.method === 'list'; }
+    function amt(b, c) { var v = perCombo(b) && b.amounts && b.amounts[c.join('_')]; return v || b.amount; }
+    function mixed(b) {
+      return perCombo(b) && b.amounts && Object.keys(b.amounts).some(function (k) { return b.amounts[k] !== b.amount; });
+    }
+    function itemTotal(b) { var t = 0; combos(b, wc).forEach(function (c) { t += amt(b, c); }); return t; }
     // the standard layout (kept apart from netkeiba/IPAT ids, which are made only when sending)
     function slip() {
       var tp = 0, ta = 0;
       var out = bets.map(function (b) {
         var cs = combos(b, wc), s = {bet_type: typeOf(b.code)[4], bet_type_label: typeOf(b.code)[1], method: b.method,
-          selections: b.selections, combinations: cs, points: cs.length, amount_per_ticket: b.amount, total_amount: cs.length * b.amount};
+          selections: b.selections, combinations: cs, points: cs.length, amount_per_ticket: b.amount, total_amount: itemTotal(b)};
+        if (mixed(b)) {  // ながし・フォーメーションで組番ごとに金額を変えたとき
+          s.combination_amounts = cs.map(function (c) { return amt(b, c); });
+          s.combination_amounts_by_key = b.amounts;
+        }
         if (b.method === 'nagashi') { s.axis = b.axis; s.partners = b.partners; s.axis_position = b.axis_position; }
         if (b.base_label) s.base_label = b.base_label;
         if (b.note) s.note = b.note;
@@ -282,7 +295,7 @@
     }
     function totals() {
       var p = 0, a = 0;
-      bets.forEach(function (b) { var n = combos(b, wc).length; p += n; a += n * b.amount; });
+      bets.forEach(function (b) { p += combos(b, wc).length; a += itemTotal(b); });
       return [p, a];
     }
 
@@ -372,23 +385,27 @@
         bets.forEach(function (b, i) { if (b.code === x[0]) idx.push(i); });
         if (!idx.length) return;
         var sp = 0, sa = 0;
-        idx.forEach(function (i) { var n = combos(bets[i], wc).length; sp += n; sa += n * bets[i].amount; });
+        idx.forEach(function (i) { sp += combos(bets[i], wc).length; sa += itemTotal(bets[i]); });
         h += '<div class="grp"><div class="gh"><span>' + x[1] + '　' + sp + '点 ' + yen(sa) + '</span><button class="s" data-deltype="' + x[0] + '">この券種を削除</button></div>';
         idx.forEach(function (i) {
           var b = bets[i], bc = combos(b, wc), r = oddsRange(odds, b, wc), ob = odds && odds.o[String(b.code)], det = '';
-          if (ob) {
-            det = '<details><summary>組番ごとのオッズ・払戻</summary><div class="cmb">' + bc.map(function (c) {
-              var v = ob[c.join('-')], pay = '';
-              if (v !== undefined && v !== null) {
-                var a = Array.isArray(v) ? v : [v, v];
-                pay = ' (' + Math.floor(a[0] * b.amount).toLocaleString() + (a[0] === a[1] ? '' : '〜' + Math.floor(a[1] * b.amount).toLocaleString()) + '円)';
-              }
-              return '<span>' + c.join(typeOf(b.code)[3] ? '→' : '-') + ' <span class="od">' + fmtOdds(v) + '</span>' + pay + '</span>';
-            }).join('') + '</div></details>';
+          var pc = perCombo(b) && bc.length > 1;
+          if (ob || pc) {  // 開いた状態で表示（2026/11/14）
+            det = '<details open><summary>組番ごとの' + (ob ? 'オッズ・払戻' : '') + (pc ? (ob ? '・' : '') + '金額' : '') + '</summary><div class="cmb' + (pc ? ' pcl' : '') + '">' +
+              bc.map(function (c) {
+                var v = ob ? ob[c.join('-')] : undefined, y = amt(b, c), pay = '';
+                if (v !== undefined && v !== null) {
+                  var a = Array.isArray(v) ? v : [v, v];
+                  pay = ' (' + Math.floor(a[0] * y).toLocaleString() + (a[0] === a[1] ? '' : '〜' + Math.floor(a[1] * y).toLocaleString()) + '円)';
+                }
+                return '<span>' + c.join(typeOf(b.code)[3] ? '→' : '-') + (ob ? ' <span class="od">' + fmtOdds(v) + '</span>' : '') +
+                  (pc ? ' <span class="amt"><input type="number" inputmode="numeric" min="1" step="1" data-ca="' + i + '" data-ck="' + c.join('_') +
+                    '" value="' + (y / 100) + '">00円</span>' : '') + pay + '</span>';
+              }).join('') + '</div></details>';
           }
           h += '<div class="it"><div>' + esc(label(b)) + (r !== null ? '　<span class="od">' + fmtOdds(r) + '倍</span>' : '') +
-            '<br><small>' + bc.length + '点 × </small><span class="amt"><input type="number" inputmode="numeric" min="1" step="1" data-amt="' + i +
-            '" value="' + (b.amount / 100) + '">00円</span><small> = ' + yen(bc.length * b.amount) + '</small>' + det +
+            '<br><small>' + bc.length + '点 × ' + (mixed(b) ? 'まとめて ' : '') + '</small><span class="amt"><input type="number" inputmode="numeric" min="1" step="1" data-amt="' + i +
+            '" value="' + (b.amount / 100) + '">00円</span><small> = ' + yen(itemTotal(b)) + (mixed(b) ? '（組番ごとに指定）' : '') + '</small>' + det +
             '</div><button class="s" data-del="' + i + '">削除</button></div>';
         });
         h += '</div>';
@@ -412,13 +429,20 @@
     }
     function sendUrl() {
       var b = [];
-      bets.forEach(function (x) { groupIds(rid, x, wc, info.d).forEach(function (id) { b.push([id, x.amount]); }); });
+      bets.forEach(function (x) {
+        if (mixed(x)) {  // 金額が組番ごとに違う: 1点ずつ送る
+          var a = aPart(rid, info.d) + '_b' + x.code;
+          combos(x, wc).forEach(function (c) { b.push([a + '_c0_' + c.join('_'), amt(x, c)]); });
+        } else groupIds(rid, x, wc, info.d).forEach(function (id) { b.push([id, x.amount]); });
+      });
       return NK_BET + rid + '#kb=' + encodeURIComponent(JSON.stringify({r: rid, b: b}));
     }
     function text() {
       var tt = totals();
       return (info.d ? info.d.slice(5).replace('-', '/') + ' ' : '') + anchor.replace('_', ' ') + 'R\n' + bets.map(function (b) {
-        return label(b) + '　' + combos(b, wc).length + '点 各' + b.amount + '円';
+        var cs = combos(b, wc);
+        return label(b) + '　' + cs.length + '点 ' + (mixed(b) ? '計' + itemTotal(b) + '円（' + cs.map(function (c) {
+          return c.join(typeOf(b.code)[3] ? '→' : '-') + ' ' + amt(b, c) + '円'; }).join('、') + '）' : '各' + b.amount + '円');
       }).join('\n') + '\n合計 ' + tt[0] + '点 ' + tt[1] + '円';
     }
     function resetSel() { st.cols = [[], [], []]; st.axis = []; st.partners = []; st.showAll = false; }
@@ -446,7 +470,7 @@
              note: (cs.length - fresh.length) + '点重複のため除外', selections: [], amount: b.amount};
         st.msg = (cs.length - fresh.length) + '点は購入予定と重複するため除き、' + fresh.length + '点を追加しました。';
       } else st.msg = cs.length + '点を購入予定に追加しました。';
-      bets.push(b); save(); resetSel();
+      b.amounts = {}; bets.push(b); save(); resetSel();
     }
     inner.addEventListener('click', function (e) {
       var b = e.target.closest('button');
@@ -485,7 +509,14 @@
       if (x.dataset.col !== undefined) toggle(+x.dataset.col, +x.dataset.n, x.checked);
       else if (x.classList.contains('kb-saf')) ls('kbViaSafari', x.checked ? 1 : 0);
       else if (x.classList.contains('kb-money')) st.amt = Math.max(1, Math.floor(+x.value || 1)) * 100;
-      else if (x.dataset.amt !== undefined) { bets[+x.dataset.amt].amount = Math.max(1, Math.floor(+x.value || 1)) * 100; save(); }
+      else if (x.dataset.amt !== undefined) {  // まとめて変更: 組番ごとの金額もそろえる
+        var bb = bets[+x.dataset.amt]; bb.amount = Math.max(1, Math.floor(+x.value || 1)) * 100; bb.amounts = {}; save();
+      } else if (x.dataset.ca !== undefined) {
+        var bc2 = bets[+x.dataset.ca], yy = Math.max(1, Math.floor(+x.value || 1)) * 100;
+        bc2.amounts = bc2.amounts || {};
+        if (yy === bc2.amount) delete bc2.amounts[x.dataset.ck]; else bc2.amounts[x.dataset.ck] = yy;
+        save();
+      }
       st.msg = '';
       render();
     });
@@ -496,6 +527,34 @@
     render();
   }
 
+  // 予想ページの小さな調整（2026/11/14 Taisuke）: 「馬券を組む」をペース予想の下へ、自動予想の印の長い注記を畳む
+  function cardOf(el) {
+    var c = el.parentNode;
+    while (c && c !== document.body && !c.querySelector('.pace-forecast')) c = c.parentNode;
+    return c && c !== document.body ? c : null;
+  }
+  function tweakCard(el) {
+    var card = cardOf(el);
+    if (!card) return;
+    var pf = card.querySelector('.pace-forecast');
+    if (pf && pf.parentNode && pf.nextSibling !== el) pf.parentNode.insertBefore(el, pf.nextSibling);
+    var blocks = card.querySelectorAll('div');
+    for (var i = 0; i < blocks.length; i++) {
+      var d = blocks[i], f = d.firstElementChild;
+      if (!f || f.tagName !== 'DIV' || !/自動予想の印/.test(f.textContent) || d.querySelector('details.kb-notes')) continue;
+      var notes = Array.prototype.filter.call(d.children, function (x) {
+        return x.tagName === 'DIV' && /font-size:\s*10px/.test(x.getAttribute('style') || '');
+      });
+      if (!notes.length) break;
+      var det = document.createElement('details');
+      det.className = 'kb-notes';
+      det.innerHTML = '<summary style="color:#888;font-size:11px;cursor:pointer;margin-top:4px">印の留意点（タップで表示）</summary>';
+      d.insertBefore(det, notes[0]);
+      notes.forEach(function (x) { det.appendChild(x); });
+      break;
+    }
+  }
+
   function init() {
     var els = document.querySelectorAll('.kb-bet:not([data-kb-done])');
     if (!els.length) return;
@@ -504,6 +563,7 @@
     }
     Array.prototype.forEach.call(els, function (el) {
       el.setAttribute('data-kb-done', '1');
+      try { tweakCard(el); } catch (e) { if (window.console) console.error('[betbuilder] tweak', e); }
       try { build(el); } catch (e) { if (window.console) console.error('[betbuilder]', e); }
     });
   }
