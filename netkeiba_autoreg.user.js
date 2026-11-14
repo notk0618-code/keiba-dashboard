@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         AF Keiba DATA → netkeiba 買い目自動登録
 // @namespace    https://notk0618-code.github.io/keiba-dashboard/
-// @version      1.2.0
+// @version      1.3.0
 // @description  AF Keiba DATA の「即PATへ送信」で開いた netkeiba 購入ページに、組んだ買い目を自動で登録します（購入はしません）。
 // @match        https://race.sp.netkeiba.com/ipat/bet_list.html*
 // @match        https://race.netkeiba.com/ipat/bet_list.html*
@@ -39,11 +39,23 @@
         for (var i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
         return ('0000000' + h.toString(16)).slice(-8);
       };
-      var key = function (id) { return d.r + '_' + hx(id, 2166136261) + hx(id, 1) + hx(id, 2) + hx(id, 3); };
-      Object.keys(s.list).forEach(function (x) { if (x.indexOf(d.r + '_kb_') === 0) delete s.list[x]; });
+      // netkeiba's own rows (sp): 'bet_<race_id>_<32 hex>_<n>'
+      var key = function (id) { return 'bet_' + d.r + '_' + hx(id, 2166136261) + hx(id, 1) + hx(id, 2) + hx(id, 3) + '_0'; };
+      // drop rows written by v1.0-1.2 (old key shapes, and the a-part IPAT rejected); netkeiba's own rows stay
+      var mine = /^[a-f0-9]{32}$/;
+      Object.keys(s.list).forEach(function (x) {
+        var r = x.indexOf(d.r + '_') === 0 ? x.slice(d.r.length + 1) : null;
+        if (r !== null && (r.indexOf('kb_') === 0 || mine.test(r))) delete s.list[x];
+      });
+      // rows of this race whose id starts differently from ours (e.g. netkeiba's copies of v1.2 rows) cannot be voted
+      var ap = d.b.length && Array.isArray(d.b[0]) ? String(d.b[0][0]).split('_')[0] : '';
+      if (/^a[1-7]-\d{1,2}-\d{1,2}$/.test(ap)) Object.keys(s.list).forEach(function (x) {
+        var id = s.list[x] && String(s.list[x].bet_id || '');
+        if (id && id.split('_')[0] !== ap) delete s.list[x];
+      });
       var n = 0, bad = 0;
       d.b.slice(0, 255).forEach(function (x) {
-        if (Array.isArray(x) && /^a\d-\d{2}-\d{1,2}_b[1-8]_c[0-8](_\d{1,2}(-\d{1,2})*){1,3}(_1)?$/.test(x[0]) &&
+        if (Array.isArray(x) && /^a[1-7]-\d{1,2}-\d{1,2}_b[1-8]_c[0-8](_\d{1,2}(-\d{1,2})*){1,3}(_1)?$/.test(x[0]) &&
             x[1] >= 100 && x[1] % 100 === 0 && x[1] <= 1000000) {
           s.list[key(x[0])] = {bet_id: x[0], bet_money: x[1]}; n++;
         } else bad++;
@@ -89,11 +101,11 @@
   function diag() {
     if (!/[#&]kbdiag/.test(location.hash) || !document.body) return;
     var q = location.search.match(/race_id=(\d{12})/), raw = q ? localStorage.getItem('ndi::bet_' + q[1]) : null, rows = [];
-    try { var l = JSON.parse(raw).list; Object.keys(l).forEach(function (k) { rows.push(k.slice(13) + '  ' + l[k].bet_id + '  ' + l[k].bet_money); }); } catch (e) {}
+    try { var l = JSON.parse(raw).list; Object.keys(l).forEach(function (k) { rows.push(k.replace(/^bet_/, '').slice(13) + '  ' + l[k].bet_id + '  ' + l[k].bet_money); }); } catch (e) {}
     var b = document.createElement('pre');
     b.style.cssText = 'position:fixed;left:6px;right:6px;top:6px;z-index:2147483647;max-height:70vh;overflow:auto;padding:10px;margin:0;' +
       'background:#111;color:#0f0;font:12px/1.5 monospace;white-space:pre-wrap;word-break:break-all;border-radius:8px';
-    b.textContent = 'AF診断 v1.2.0  race_id=' + (q ? q[1] : '?') + '\n' + (rows.join('\n') || '(買い目リストは空です)') + '\n\nraw: ' + raw;
+    b.textContent = 'AF診断 v1.3.0  race_id=' + (q ? q[1] : '?') + '\n' + (rows.join('\n') || '(買い目リストは空です)') + '\n\nraw: ' + raw;
     b.onclick = function () { b.remove(); };
     document.body.appendChild(b);
   }

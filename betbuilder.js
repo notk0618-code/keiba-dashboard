@@ -40,10 +40,17 @@
   function num(a) { return a.slice().sort(function (x, y) { return x - y; }); }
   function yen(v) { return v.toLocaleString() + '円'; }
 
-  // netkeiba bet_list.min.js make_bet(): a-part from the race_id exactly as netkeiba computes it
-  function aPart(rid) {
-    var v = new Date(+rid.substr(0, 4), +rid.substr(4, 2) - 1, +rid.substr(6, 2)).getDay();
-    return 'a' + v + '-' + rid.substr(8, 2) + '-' + parseInt(rid.substr(10, 2), 10);
+  // a-part as race.sp.netkeiba.com writes it for a bet typed on its own page (seen 2026/11/14 on the device:
+  // 東京11R 土曜 = a7-5-11): a{曜日 1=日…7=土}-{場コード, no zero}-{R}. date = 'YYYY-MM-DD' of the race.
+  // (The PC page's script builds it from race_id digits instead; IPAT rejected that form with error 120.)
+  function raceDate(date) {
+    if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) return new Date(+date.substr(0, 4), +date.substr(5, 2) - 1, +date.substr(8, 2));
+    var d = new Date(); d.setHours(0, 0, 0, 0);  // no date on the card: the next Saturday/Sunday from today
+    while (d.getDay() !== 0 && d.getDay() !== 6) d.setDate(d.getDate() + 1);
+    return d;
+  }
+  function aPart(rid, date) {
+    return 'a' + (raceDate(date).getDay() + 1) + '-' + parseInt(rid.substr(4, 2), 10) + '-' + parseInt(rid.substr(10, 2), 10);
   }
 
   // ながし → formation columns. Unordered: 軸 then 相手 (2軸 3連複: 軸, 軸, 相手). Ordered: 軸 at its 着順, 相手 elsewhere.
@@ -93,8 +100,8 @@
     return out;
   }
   // netkeiba's grouped form when the whole bet is one block; one c0 row per combination otherwise
-  function groupIds(rid, b, wc) {
-    var a = aPart(rid) + '_b' + b.code, cs = combos(b, wc), k = typeOf(b.code)[2];
+  function groupIds(rid, b, wc, date) {
+    var a = aPart(rid, date) + '_b' + b.code, cs = combos(b, wc), k = typeOf(b.code)[2];
     var col = function (c) { return num(c).join('-'); };
     if (!cs.length) return [];
     if (cs.length === 1 || b.code === 3 || b.method === 'list')
@@ -405,7 +412,7 @@
     }
     function sendUrl() {
       var b = [];
-      bets.forEach(function (x) { groupIds(rid, x, wc).forEach(function (id) { b.push([id, x.amount]); }); });
+      bets.forEach(function (x) { groupIds(rid, x, wc, info.d).forEach(function (id) { b.push([id, x.amount]); }); });
       return NK_BET + rid + '#kb=' + encodeURIComponent(JSON.stringify({r: rid, b: b}));
     }
     function text() {
